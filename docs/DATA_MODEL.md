@@ -37,3 +37,9 @@
 }
 ```
 Никакая строка из примера не считается реально найденной в Wiki.
+
+## Фактическая схема пилота 0.2.0
+
+Не заменяет целевую предметную модель выше. Таблицы: `pages` (последнее состояние и последний успешный sha), `blobs` (байты/путь/hash), `snapshots` (source+final URL, blob, кодировка, origin и extractor), `link_occurrences` (snapshot+ordinal, исходный href, нормализованный URL, текст и контекст), `excluded_links`, `source_events` (append-only попытки и метаданные), `queue` (depth/state/attempts/not_before), `settings` (режим, cooldown, идентификаторы импорта).
+
+`source_events.checked_at` для импортированных наблюдений сохраняет исходное время запроса, а не время импорта. Наблюдение API Яндекс Диска хранится как metadata_only и содержит подтверждённые paths дочерних каталогов в JSON details; это ещё не полная resource_edge-модель. Старые вхождения без оригиналов имеют snapshot_id=NULL и явно считаются legacy в отчёте.

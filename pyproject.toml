@@ -1,7 +1,7 @@
 [project]
 name = "fkn-atlas"
-version = "0.1.0"
-description = "Minimal provenance-first reconnaissance scaffold for Wiki FKN"
+version = "0.2.0"
+description = "Resumable provenance-first reconnaissance pilot for Wiki FKN"
 requires-python = ">=3.11"
 
 [build-system]
