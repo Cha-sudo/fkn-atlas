@@ -15,6 +15,14 @@ def zip_bytes(entries, compression=ZIP_STORED):
     out = io.BytesIO()
     with ZipFile(out, 'w', compression=compression) as archive:
         for name, data in entries:
+            if isinstance(name, str):
+                # ZipInfo normalizes os.sep on Windows. Keep deliberately unsafe
+                # raw names in test archives so every platform tests identical bytes.
+                info = ZipInfo(name)
+                info.filename = name
+                info.orig_filename = name
+                info.compress_type = compression
+                name = info
             archive.writestr(name, data)
     return out.getvalue()
 
