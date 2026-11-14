@@ -1,4 +1,5 @@
 """A reviewed text derivative must keep both its source and extraction evidence."""
+from contextlib import ExitStack
 import importlib.util
 from pathlib import Path
 import sys
@@ -17,9 +18,9 @@ spec.loader.exec_module(mapping_tool)
 
 class ReviewedMapTest(unittest.TestCase):
     def test_new_derivative_requires_original_link_and_preserves_raw_text(self):
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory() as temp, ExitStack() as cleanup:
             store = Store(str(Path(temp) / 'data.sqlite'))
-            self.addCleanup(store.close)
+            cleanup.callback(store.close)
             raw = 'à × A'.encode('utf8')
             sha = store.save_blob(raw)
             rid = Catalog(store).upsert('fixture', 'https://fixture.local/a',

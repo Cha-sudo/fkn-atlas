@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 import hashlib
 from pathlib import Path
 import sys
@@ -12,10 +13,10 @@ from fkn_atlas.resources import extract_resource
 
 class LocalImportTests(unittest.TestCase):
     def test_requires_discovery_and_validates_bytes_preserving_repeat(self):
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory() as temp, ExitStack() as cleanup:
             root = Path(temp)
             store = Store(str(root / 'data.sqlite'))
-            self.addCleanup(store.close)
+            cleanup.callback(store.close)
             file = root / 'notes.txt'
             file.write_text('Definitions and exercises', encoding='utf8')
             page, target = 'https://example.org/course', 'https://drive.google.com/file/d/example/view'
@@ -36,10 +37,10 @@ class LocalImportTests(unittest.TestCase):
             self.assertEqual(store.db.execute('SELECT access FROM resources').fetchone()[0], 'unknown')
 
     def test_exact_version_extraction_and_reimport_old_bytes(self):
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory() as temp, ExitStack() as cleanup:
             root = Path(temp)
             store = Store(str(root / 'data.sqlite'))
-            self.addCleanup(store.close)
+            cleanup.callback(store.close)
             file = root / 'notes.txt'
             page, target = 'https://example.org/course', 'https://example.org/notes.txt'
             raw = ('<p><a href="' + target + '">notes</a></p>').encode()
@@ -68,9 +69,9 @@ class LocalImportTests(unittest.TestCase):
             self.assertEqual(store.db.execute('SELECT COUNT(*) FROM resource_contents').fetchone()[0], 2)
 
     def test_signed_source_is_rejected_before_persistence(self):
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory() as temp, ExitStack() as cleanup:
             store = Store(str(Path(temp) / 'data.sqlite'))
-            self.addCleanup(store.close)
+            cleanup.callback(store.close)
             with self.assertRaisesRegex(ValueError, 'signed'):
                 import_local_file(store, 'not-read.pdf', 'https://example.org/file?signature=SECRET', 'https://example.org/course')
             self.assertNotIn('SECRET', '\n'.join(store.db.iterdump()))
