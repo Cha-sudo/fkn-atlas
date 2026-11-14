@@ -167,14 +167,15 @@ class Fetcher:
 
 def process_html(store: Store, source_url: str, html: str, depth: int,
                  scope_host: str, max_depth: int, *, raw=None, final_url=None,
-                 status=200, content_type="text/html", encoding="utf-8", origin="demo", stage="page", redirects=None):
+                 status=200, content_type="text/html", encoding="utf-8", origin="demo", stage="page", redirects=None,
+                 observed_at=None, evidence_details=None):
     doc = extract_links(html)
     raw = html.encode("utf-8") if raw is None else raw
     final_url = final_url or source_url
     base = normalize_url(doc.base_href, final_url) if doc.base_href else final_url
     base = base or final_url
     with store.transaction():
-        snapshot_id = store.snapshot(source_url, final_url, raw, doc.title, status, content_type, encoding, origin)
+        snapshot_id = store.snapshot(source_url, final_url, raw, doc.title, status, content_type, encoding, origin, observed_at)
         processed = 0
         for link in doc.links:
             absolute = normalize_url(link.href, base)
@@ -189,7 +190,7 @@ def process_html(store: Store, source_url: str, html: str, depth: int,
             if internal and depth < max_depth:
                 store.enqueue(absolute, depth + 1)
         store.event(source_url, stage, "fetched", status, snapshot_id=snapshot_id,
-            details={"final_url": final_url, "origin": origin, "links": processed, "redirects": redirects or []})
+            details={"final_url": final_url, "origin": origin, "links": processed, "redirects": redirects or [], **(evidence_details or {})}, observed_at=observed_at)
         store.mark_done(source_url)
     return processed
 

@@ -1,8 +1,11 @@
 [project]
 name = "fkn-atlas"
-version = "0.2.0"
+version = "0.3.0"
 description = "Resumable provenance-first reconnaissance pilot for Wiki FKN"
 requires-python = ">=3.11"
+
+[project.optional-dependencies]
+documents = ["pypdf>=5,<7"]
 
 [build-system]
 requires = ["setuptools>=68"]

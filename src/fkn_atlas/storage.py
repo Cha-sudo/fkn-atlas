@@ -53,6 +53,46 @@ CREATE TABLE IF NOT EXISTS queue (
  attempts INTEGER NOT NULL DEFAULT 0, last_error TEXT, updated_at TEXT NOT NULL,
  not_before REAL NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS resources (
+ id TEXT PRIMARY KEY, provider TEXT NOT NULL, source_key TEXT NOT NULL, path TEXT NOT NULL,
+ name TEXT NOT NULL, kind TEXT NOT NULL, size INTEGER, expected_sha256 TEXT,
+ metadata_sha256 TEXT REFERENCES blobs(sha256), metadata_json TEXT NOT NULL,
+ discovery TEXT NOT NULL DEFAULT 'found', access TEXT NOT NULL DEFAULT 'unknown',
+ content_state TEXT NOT NULL DEFAULT 'metadata_only', updated_at TEXT NOT NULL,
+ UNIQUE(provider,source_key,path)
+);
+CREATE TABLE IF NOT EXISTS resource_edges (
+ parent_id TEXT NOT NULL REFERENCES resources(id), child_id TEXT NOT NULL REFERENCES resources(id),
+ relation TEXT NOT NULL, evidence_sha256 TEXT NOT NULL REFERENCES blobs(sha256),
+ PRIMARY KEY(parent_id,child_id,relation,evidence_sha256)
+);
+CREATE TABLE IF NOT EXISTS resource_observations (
+ resource_id TEXT NOT NULL REFERENCES resources(id), metadata_sha256 TEXT NOT NULL REFERENCES blobs(sha256),
+ evidence_url TEXT NOT NULL, observed_at TEXT NOT NULL,
+ PRIMARY KEY(resource_id,metadata_sha256)
+);
+CREATE TABLE IF NOT EXISTS resource_jobs (
+ resource_id TEXT NOT NULL REFERENCES resources(id), stage TEXT NOT NULL,
+ state TEXT NOT NULL DEFAULT 'queued', depth INTEGER NOT NULL DEFAULT 0,
+ offset INTEGER NOT NULL DEFAULT 0, reported_total INTEGER,
+ attempts INTEGER NOT NULL DEFAULT 0, not_before REAL NOT NULL DEFAULT 0,
+ last_error TEXT, updated_at TEXT NOT NULL, PRIMARY KEY(resource_id,stage)
+);
+CREATE TABLE IF NOT EXISTS resource_contents (
+ resource_id TEXT NOT NULL REFERENCES resources(id), sha256 TEXT NOT NULL REFERENCES blobs(sha256),
+ content_type TEXT NOT NULL, metadata_sha256 TEXT REFERENCES blobs(sha256), retrieved_at TEXT NOT NULL,
+ PRIMARY KEY(resource_id,sha256)
+);
+CREATE TABLE IF NOT EXISTS derived_artifacts (
+ resource_id TEXT NOT NULL REFERENCES resources(id), input_sha256 TEXT NOT NULL REFERENCES blobs(sha256),
+ artifact_sha256 TEXT NOT NULL REFERENCES blobs(sha256), extractor TEXT NOT NULL,
+ state TEXT NOT NULL, metadata_json TEXT NOT NULL, created_at TEXT NOT NULL,
+ PRIMARY KEY(resource_id,input_sha256,extractor)
+);
+CREATE TABLE IF NOT EXISTS content_reviews (
+ resource_id TEXT NOT NULL REFERENCES resources(id), input_sha256 TEXT NOT NULL REFERENCES blobs(sha256),
+ review_json TEXT NOT NULL, reviewed_at TEXT NOT NULL, PRIMARY KEY(resource_id,input_sha256)
+);
 """
 
 
@@ -68,7 +108,7 @@ class Store:
         self.db = sqlite3.connect(self.path)
         self.db.execute("PRAGMA foreign_keys=ON")
         self._batch = 0
-        if self.db.execute("PRAGMA user_version").fetchone()[0] > 2:
+        if self.db.execute("PRAGMA user_version").fetchone()[0] > 3:
             self.close()
             raise ValueError("Database schema is newer than this application")
         # Preserve all v1 records. They have no raw evidence and stay explicitly legacy.
@@ -93,7 +133,7 @@ class Store:
                 DROP TABLE legacy_link_occurrences;""")
         try:
             # executescript commits any existing transaction: BEGIN must be inside the script.
-            self.db.executescript("BEGIN IMMEDIATE;\n" + "\n".join(migration) + "\nPRAGMA user_version=2;\nCOMMIT;")
+            self.db.executescript("BEGIN IMMEDIATE;\n" + "\n".join(migration) + "\nPRAGMA user_version=3;\nCOMMIT;")
         except BaseException:
             self.db.rollback()
             self.db.close()
@@ -198,20 +238,20 @@ class Store:
             self._commit()
         return row
 
-    def record_page(self, url, title, state, http_status, sha256, error):
+    def record_page(self, url, title, state, http_status, sha256, error, observed_at=None):
         self.db.execute("""INSERT INTO pages VALUES (?,?,?,?,?,?,?) ON CONFLICT(url) DO UPDATE SET
             title=CASE WHEN excluded.title='' THEN pages.title ELSE excluded.title END,
             state=excluded.state,http_status=excluded.http_status,
             sha256=COALESCE(excluded.sha256,pages.sha256),last_error=excluded.last_error,checked_at=excluded.checked_at""",
-            (url, title, state, http_status, sha256, error, utc_now()))
+            (url, title, state, http_status, sha256, error, observed_at or utc_now()))
         self._commit()
 
-    def snapshot(self, url, final_url, raw, title, status, content_type, encoding, origin):
+    def snapshot(self, url, final_url, raw, title, status, content_type, encoding, origin, observed_at=None):
         sha = self.save_blob(raw)
-        self.record_page(url, title, "fetched", status, sha, None)
+        self.record_page(url, title, "fetched", status, sha, None, observed_at)
         self.db.execute("""INSERT OR IGNORE INTO snapshots
             (source_url,final_url,sha256,title,http_status,content_type,encoding,extractor,origin,observed_at)
-            VALUES (?,?,?,?,?,?,?,'stdlib-html/2',?,?)""", (url, final_url, sha, title, status, content_type, encoding, origin, utc_now()))
+            VALUES (?,?,?,?,?,?,?,'stdlib-html/2',?,?)""", (url, final_url, sha, title, status, content_type, encoding, origin, observed_at or utc_now()))
         row = self.db.execute("SELECT id FROM snapshots WHERE source_url=? AND final_url=? AND sha256=? AND extractor='stdlib-html/2'", (url, final_url, sha)).fetchone()
         self._commit()
         return row[0]
@@ -260,7 +300,7 @@ class Store:
             "crawl_exclusions": counts("SELECT exclusion_reason,COUNT(*) FROM link_occurrences WHERE exclusion_reason IS NOT NULL GROUP BY exclusion_reason"),
             "checked_at_range": list(self.db.execute("SELECT MIN(checked_at),MAX(checked_at) FROM source_events").fetchone()),
             "coverage_basis": "Only recorded pages and discovered URLs; no claim about all courses or content analysis",
-            "content_analyzed": 0,
+            "content_analyzed": scalar("SELECT COUNT(DISTINCT resource_id) FROM content_reviews"),
             "verified_replacements": 0,
         }
 
@@ -270,7 +310,7 @@ class Store:
             raise ValueError("Export cannot overwrite the database or evidence")
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as out:
-            for table in ("pages", "snapshots", "link_occurrences", "excluded_links", "source_events", "queue", "blobs"):
+            for table in ("pages", "snapshots", "link_occurrences", "excluded_links", "source_events", "queue", "blobs", "resources", "resource_edges", "resource_observations", "resource_jobs", "resource_contents", "derived_artifacts", "content_reviews"):
                 cursor = self.db.execute(f"SELECT * FROM {table}")
                 names = [d[0] for d in cursor.description]
                 for row in cursor:

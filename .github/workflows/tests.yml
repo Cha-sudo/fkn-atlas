@@ -1,0 +1,26 @@
+name: Python checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    env:
+      PYTHONPATH: src
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install "pypdf>=5,<7"
+      - run: python -m unittest discover -s tests -v
+      - run: python -m fkn_atlas demo --db runtime/ci-demo.sqlite
+      - run: python -m fkn_atlas report --db runtime/ci-demo.sqlite

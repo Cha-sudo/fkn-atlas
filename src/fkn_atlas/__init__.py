@@ -1,5 +1,5 @@
 """Resumable, provenance-first Wiki FKN reconnaissance pilot.
 
-This package does NOT download videos or cloud folders and does NOT reconstruct courses.
+Bounded provider downloads and offline extraction; course reconstruction is not implemented.
 """
-__version__ = "0.2.0"
+__version__ = "0.3.0"

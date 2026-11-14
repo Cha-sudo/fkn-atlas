@@ -43,3 +43,9 @@
 Не заменяет целевую предметную модель выше. Таблицы: `pages` (последнее состояние и последний успешный sha), `blobs` (байты/путь/hash), `snapshots` (source+final URL, blob, кодировка, origin и extractor), `link_occurrences` (snapshot+ordinal, исходный href, нормализованный URL, текст и контекст), `excluded_links`, `source_events` (append-only попытки и метаданные), `queue` (depth/state/attempts/not_before), `settings` (режим, cooldown, идентификаторы импорта).
 
 `source_events.checked_at` для импортированных наблюдений сохраняет исходное время запроса, а не время импорта. Наблюдение API Яндекс Диска хранится как metadata_only и содержит подтверждённые paths дочерних каталогов в JSON details; это ещё не полная resource_edge-модель. Старые вхождения без оригиналов имеют snapshot_id=NULL и явно считаются legacy в отчёте.
+
+## Аддитивное расширение 0.3.0 (schema 3)
+
+Добавлены `resources`, `resource_edges`, `resource_observations`, `resource_jobs`, `resource_contents`, `derived_artifacts`, `content_reviews`. SHA оригинала, SHA текста и extractor/version раздельны; отзывы о содержимом привязаны к конкретному input_sha. Повторные byte-identical материалы не сливают ресурсные связи. Архивные вложения имеют provider=archive и kind=archive_member; число скачанных файлов исключает такие вложения. Статистика content_reviewed_resources считает ресурсы с хотя бы одной записанной проверкой версии, а не подтверждённые замены лекций.
+
+Успешные jobs metadata завершают только наблюдённую пагинацию каталога. Изменения каталога после её завершения не обнаруживаются автоматически; метрика полноты ограничена полученной выборкой. Временные download URL намеренно не входят в постоянную модель и журналы.

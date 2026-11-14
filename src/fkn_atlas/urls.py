@@ -50,11 +50,12 @@ def scope_reason(url: str, host: str = "fruitdet.ru") -> str | None:
         path = unquote(p.path)
         if "\\" in path or any(part in (".", "..") for part in path.split("/")):
             return "unsafe_path"
-        if not (path == "/wiki" or path.startswith("/wiki/")):
+        prefix = "" if host == "wikics.site" else "/wiki"
+        if not (path == prefix or path.startswith(prefix + "/")):
             return "outside_wiki_path"
         if p.query:
             return "wiki_query_not_crawled"
-        name = path.removeprefix("/wiki/").split("/", 1)[0].casefold()
+        name = path.removeprefix(prefix + "/").split("/", 1)[0].casefold()
         if any(name.startswith(prefix + ":") for prefix in (
             "special", "служебная", "file", "файл", "media", "медиа", "user", "участник", "talk", "обсуждение"
         )):
@@ -85,4 +86,6 @@ def provider_for(url: str) -> str:
         return "direct_file"
     if host in {"fruitdet.ru", "wiki.cs.hse.ru"}:
         return "wiki"
+    if host == "wikics.site":
+        return "wiki_mirror"
     return "web"
