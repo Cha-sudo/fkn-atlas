@@ -31,3 +31,7 @@
 ## Расширение 0.3.0
 
 Поверх прежнего Store добавлены public provider transport, Catalog и адаптеры Yandex/YouTube/GitHub archive, ресурсные jobs/edges и offline content inspectors. Экспорт JSONL включает новые таблицы. Текущие возможности и фактический охват описаны в README и research/CONTENT_PILOT.md; полный разбор видео и сопоставление курсов не реализованы.
+
+## Расширение 0.4.0
+
+Добавлены доказательное досье `reconcile.py` и локальный импорт `ingest.py` поверх существующих Store/Catalog. Архитектура сбора/хранения не заменялась. Протокол и ограничения — [RECONCILIATION](RECONCILIATION.md); реальный сквозной результат — [линейная алгебра](research/LINEAR_ALGEBRA_PILOT.md). Оригиналы, первичный извлечённый текст и проверенная символьная правка остаются разными blob.

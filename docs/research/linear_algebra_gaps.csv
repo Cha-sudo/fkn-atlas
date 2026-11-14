@@ -1,0 +1,32 @@
+gap_id,version,reason,status,candidates,scope_note
+la2023-gap6,la2023,link_missing,partial_support,la2024-lecture6,Нет ссылки на материал в абзаце лекции 6
+la2023-gap7,la2023,link_missing,partial_support,la2024-lecture7,Нет ссылки на материал в абзаце лекции 7
+la2023-gap12,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 12
+la2023-gap13,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 13
+la2023-gap14,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 14
+la2023-gap22,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 22
+la2023-gap23,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 23
+la2023-gap24,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 24
+la2023-gap25,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 25
+la2023-gap26,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 26
+la2023-gap29,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 29
+la2023-gap30,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 30
+la2023-gap32,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 32
+la2023-gap33,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 33
+la2023-gap34,la2023,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 34
+la2024-gap12,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 12
+la2024-gap13,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 13
+la2024-gap14,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 14
+la2024-gap20,la2024,link_missing,unresolved,la2023-lecture20,Нет ссылки на материал в абзаце лекции 20
+la2024-gap22,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 22
+la2024-gap24,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 24
+la2024-gap25,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 25
+la2024-gap29,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 29
+la2024-gap30,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 30
+la2024-gap32,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 32
+la2024-gap33,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 33
+la2024-gap34,la2024,link_missing,unresolved,,Нет ссылки на материал в абзаце лекции 34
+la2023-lecture1-incomplete,la2023,content_incomplete,unresolved,,Lec01_2023-09-05.pdf: PDF покрывает лишь часть плана
+la2024-lecture1-incomplete,la2024,content_incomplete,unresolved,,Lec01_2024-09-02.pdf: PDF покрывает лишь часть плана
+la2024-lecture6-incomplete,la2024,content_incomplete,unresolved,,Lec06_2024-10-07.pdf: PDF покрывает лишь часть плана
+la2024-lecture7-incomplete,la2024,content_incomplete,unresolved,,Lec07_2024-10-14.pdf: PDF покрывает лишь часть плана

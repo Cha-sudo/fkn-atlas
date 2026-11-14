@@ -7,12 +7,14 @@ from .storage import Store
 from .crawler import run_demo, run_scout
 from .resources import Catalog, YandexDiskPublicAdapter, PUBLIC_EXAMPLE, extract_resource
 from .providers import YouTubeResourceAdapter, GitHubArchiveAdapter
+from .ingest import import_local_file
+from .reconcile import Reconciler
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description="FKN Atlas — provenance-first pilot")
     sub = parser.add_subparsers(dest="action", required=True)
-    for name in ("demo", "scout", "report", "export", "yandex-scan", "yandex-fetch", "yandex-probe", "resources", "extract", "youtube-probe", "github-archive"):
+    for name in ("demo", "scout", "report", "export", "yandex-scan", "yandex-fetch", "yandex-probe", "resources", "extract", "youtube-probe", "github-archive", "import-file", "reconcile-import", "reconcile-report", "reconcile-candidates"):
         item = sub.add_parser(name)
         item.add_argument("--db", default=f"runtime/{'demo' if name == 'demo' else 'pilot'}.sqlite")
         if name == "scout":
@@ -39,8 +41,22 @@ def main():
             item.add_argument("--repository", required=True)
             item.add_argument("--source-url", required=True)
             item.add_argument("--max-mib", type=int, default=8)
-    args = parser.parse_args()
-    if args.action in ("report", "export") and not Path(args.db).is_file():
+        if name == "import-file":
+            item.add_argument("--filename", required=True)
+            item.add_argument("--source-url", required=True)
+            item.add_argument("--discovered-on", required=True)
+            item.add_argument("--expected-sha256")
+            item.add_argument("--expected-size", type=int)
+            item.add_argument("--acquisition", choices=("local_import", "google_drive_connector"), default="local_import")
+        if name == "reconcile-import":
+            item.add_argument("--dossier", required=True)
+        if name == "reconcile-report":
+            item.add_argument("--dossier-id")
+        if name == "reconcile-candidates":
+            item.add_argument("--material-id", required=True)
+            item.add_argument("--limit", type=int, default=10)
+    args = parser.parse_args(argv)
+    if args.action in ("report", "export", "import-file", "reconcile-import", "reconcile-report", "reconcile-candidates") and not Path(args.db).is_file():
         parser.error("Database does not exist; run demo or scout first")
     store = Store(args.db)
     try:
@@ -66,10 +82,19 @@ def main():
             stats = YouTubeResourceAdapter(store).probe(args.video_id)
         elif args.action == "github-archive":
             stats = GitHubArchiveAdapter(store).fetch(args.repository, args.source_url, args.max_mib*1024*1024)
+        elif args.action == "import-file":
+            stats = import_local_file(store, args.filename, args.source_url, args.discovered_on,
+                expected_sha256=args.expected_sha256, expected_size=args.expected_size, acquisition=args.acquisition)
+        elif args.action == "reconcile-import":
+            stats = Reconciler(store).import_dossier(json.loads(Path(args.dossier).read_text(encoding="utf-8")))
+        elif args.action == "reconcile-report":
+            stats = Reconciler(store).report(args.dossier_id)
+        elif args.action == "reconcile-candidates":
+            stats = Reconciler(store).rank_candidates(args.material_id, args.limit)
         else:
             stats = store.stats()
         print(json.dumps(stats, ensure_ascii=False, indent=2))
-    except ValueError as exc:
+    except (ValueError, OSError) as exc:
         parser.error(str(exc))
     finally:
         store.close()

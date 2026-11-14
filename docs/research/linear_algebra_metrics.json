@@ -1,0 +1,333 @@
+{
+  "iteration": "0.4.0",
+  "checked_date_moscow": "2026-11-14",
+  "course": "Линейная алгебра и геометрия",
+  "versions": [
+    {
+      "id": "la2023",
+      "year": "2023/2024",
+      "program": "ПМИ и ЭАД",
+      "stream": "основной поток ПМИ; совместное преподавание ЭАД",
+      "source_url": "https://wiki.cs.hse.ru/%D0%9B%D0%B8%D0%BD%D0%B5%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B0%D0%BB%D0%B3%D0%B5%D0%B1%D1%80%D0%B0_%D0%B8_%D0%B3%D0%B5%D0%BE%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D1%8F_%D0%BD%D0%B0_%D0%9F%D0%9C%D0%98_2023/2024_(%D0%BE%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B9_%D0%BF%D0%BE%D1%82%D0%BE%D0%BA)"
+    },
+    {
+      "id": "la2024",
+      "year": "2024/2025",
+      "program": "ПМИ и ЭАД",
+      "stream": "основной поток ПМИ; совместное преподавание ЭАД",
+      "source_url": "https://wiki.cs.hse.ru/%D0%9B%D0%B8%D0%BD%D0%B5%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B0%D0%BB%D0%B3%D0%B5%D0%B1%D1%80%D0%B0_%D0%B8_%D0%B3%D0%B5%D0%BE%D0%BC%D0%B5%D1%82%D1%80%D0%B8%D1%8F_%D0%BD%D0%B0_%D0%9F%D0%9C%D0%98_2024/2025_(%D0%BE%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B9_%D0%BF%D0%BE%D1%82%D0%BE%D0%BA)"
+    }
+  ],
+  "scope_statistics": {
+    "linked_objects": 103,
+    "link_occurrences": 104,
+    "syllabus_entries": 68,
+    "downloaded_pdf_files": 13,
+    "downloaded_pdf_bytes": 5262423,
+    "pdf_pages": 42,
+    "pdf_text_extracted": 12,
+    "pdf_content_reviewed": 12,
+    "pdf_text_pages": 41,
+    "course_pages": 2,
+    "verified_scoped_pairs": 3,
+    "partial_pairs": 4,
+    "additional": 1,
+    "rejected": 1,
+    "insufficient_evidence": 1,
+    "link_missing_gaps": 27,
+    "incomplete_pdf_gaps": 4,
+    "unresolved_gaps": 31,
+    "partially_supported_gaps": 2,
+    "fully_supported_gaps": 0,
+    "historical_originals_recovered": 0,
+    "unretrieved_linked_objects": 90
+  },
+  "materials": [
+    {
+      "id": "la2023-sheet1",
+      "source_url": "https://drive.google.com/file/d/10YLuBaokdc_L9MX_II9HX5UUSLxbV-20/view?usp=sharing",
+      "sha256": "90b0a66a2d13f7058f20c25becb389780ec0c3a773ae316a491580ddaf84a9db",
+      "bytes": 123916,
+      "pages": 1,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-sheet1",
+      "source_url": "https://drive.google.com/file/d/1SX2LXXiooxpgBasL3BFDQ3x4gOSYGpD-/view?usp=drive_link",
+      "sha256": "8623f34eabfa84bc62ec04699787cae60edb3ccb216347765b3fb3194d8c9975",
+      "bytes": 123922,
+      "pages": 1,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2023-lecture1",
+      "source_url": "https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view?usp=sharing",
+      "sha256": "2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7",
+      "bytes": 200452,
+      "pages": 8,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-lecture1",
+      "source_url": "https://drive.google.com/file/d/1W0E8F252bg2-2t40sGnUrqq6is5oemfg/view?usp=sharing",
+      "sha256": "301959afa194d66a4caad6bf565704dda34f13ad274d790542b7c20a0a4f47eb",
+      "bytes": 200743,
+      "pages": 8,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-lecture6",
+      "source_url": "https://drive.google.com/file/d/1msPH4v-2_P7nqhuL4I-NvvRRyv0JK_VN/view?usp=sharing",
+      "sha256": "8ae979059f02648f1873471ca41c9510f3d0ba95cce98219fdd125923b6b05b2",
+      "bytes": 175021,
+      "pages": 4,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-lecture7",
+      "source_url": "https://drive.google.com/file/d/16aA_s9hGbk2JFBXJVfaWX6_FaprkUdbO/view?usp=sharing",
+      "sha256": "4b54928bf0ee0545574ba7ed3d4f70e853d06c4919194b1a57622b12e51ab986",
+      "bytes": 103493,
+      "pages": 1,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2023-lecture20",
+      "source_url": "https://drive.google.com/file/d/1sPjDDLpBEZgy2A52lKvu0G9VjWY1FlMS/view?usp=sharing",
+      "sha256": "7e00bc4621c4dffe19f7aa06814a592d46decaa74c44deb3a9034fd51841393a",
+      "bytes": 3521693,
+      "pages": 1,
+      "text_extracted": false,
+      "content_reviewed": false
+    },
+    {
+      "id": "la2023-sheet2",
+      "source_url": "https://drive.google.com/file/d/1B23wUXja6WJMCS2VW1Orzk8lD3Quwm9D/view?usp=share_link",
+      "sha256": "e040981c489487415d8dc4c233d13e2adf9804790e21715d27804a1c88250ab1",
+      "bytes": 137779,
+      "pages": 1,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-sheet2",
+      "source_url": "https://drive.google.com/file/d/1nSQB0xF9p35X83eFzbpQ3DqX30YxyfJ6/view?usp=drive_link",
+      "sha256": "d3eac7158d6e4c3c0465019e92962bd4e0786d3f5bc0a8898009a8bb9e163414",
+      "bytes": 138518,
+      "pages": 1,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2023-control",
+      "source_url": "https://drive.google.com/file/d/1NvW8OeWrbbofAMLyEOkgQylY2bygcH-4/view?usp=sharing",
+      "sha256": "4ddf02fd39ddb9b98d57f1c0569b61c9431acedca120f328b192adc4dc749634",
+      "bytes": 132780,
+      "pages": 4,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-control",
+      "source_url": "https://drive.google.com/file/d/1MjODzvQkoSAYx5tVLdnIdD0pJ3930R9V/view?usp=drive_link",
+      "sha256": "1ee7301b4de58d9c4dca436cc9868a830cddfa23e26e64a2de0f3f72895ae3b9",
+      "bytes": 120596,
+      "pages": 4,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2023-exam",
+      "source_url": "https://drive.google.com/file/d/1MCYh8sVp5ERJ-T36u3X6TeNkKrw_SuQ8/view?usp=sharing",
+      "sha256": "879268c7e31e7fe38ba668c9b5c136446b0183ce8d6ecf531bb5c015b06fa35c",
+      "bytes": 141896,
+      "pages": 4,
+      "text_extracted": true,
+      "content_reviewed": true
+    },
+    {
+      "id": "la2024-exam",
+      "source_url": "https://drive.google.com/file/d/16dLdxUR3i1NbDRpXjPG7pJ98LE9OCRBE/view?usp=drive_link",
+      "sha256": "f505d6ba5789bacd766df8b634edd490b14e9f97e01facde467195ad654b1ab4",
+      "bytes": 141614,
+      "pages": 4,
+      "text_extracted": true,
+      "content_reviewed": true
+    }
+  ],
+  "decisions": [
+    {
+      "id": "sheet1-equivalence",
+      "left_id": "la2023-sheet1",
+      "right_id": "la2024-sheet1",
+      "status": "verified",
+      "scope": [
+        "Определения и условия задач 1–8 листка об алгебрах Ли"
+      ],
+      "reason": "После исключения строки года полный извлечённый текст совпадает; прочитаны все определения и задачи.",
+      "limitations": "Подтверждена эквивалентность условий; корректность и трудоёмкость решений не проверены.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "sheet2-equivalence",
+      "left_id": "la2023-sheet2",
+      "right_id": "la2024-sheet2",
+      "status": "verified",
+      "scope": [
+        "Определения и условия задач 1–7 листка о разложениях"
+      ],
+      "reason": "Изменён термин унимономиальная на матрица перестановки при той же явной дефиниции; условия LU/PLU/VPU и прочих задач сохраняют математическое содержание.",
+      "limitations": "Это семантическое соответствие условий с терминологической правкой, не идентичность файлов; все формулы решений не проверялись.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "lecture1-math-equivalence-v2",
+      "left_id": "la2023-lecture1",
+      "right_id": "la2024-lecture1",
+      "status": "verified",
+      "scope": [
+        "Математические слайды 4–8: матрицы, равенство, сложение, скаляр, R^n"
+      ],
+      "reason": "Текст математической части совпадает полностью, определения и упражнение сверены; изменение формулы оценки в странице PDF 3 исключено из scope.",
+      "limitations": "Страницы PDF 1–3 и весь заявленный план лекции эквивалентом не объявляются: формула оценки различается; транспонирование и произведение не представлены.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "gap6-support",
+      "left_id": "la2023-syllabus6",
+      "right_id": "la2024-lecture6",
+      "status": "partial",
+      "scope": [
+        "нулевая строка",
+        "масштабирование строки",
+        "аддитивность определителя"
+      ],
+      "reason": "PDF4страницы содержит формулировки и доказательства трёх свойств через сумму по перестановкам, но не полный план2023.",
+      "limitations": "Нет доказательств транспонирования, одинаковых строк, прибавления/перестановки строк, треугольных матриц; историческая лекция не восстановлена.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "gap7-support",
+      "left_id": "la2023-syllabus7",
+      "right_id": "la2024-lecture7",
+      "status": "partial",
+      "scope": [
+        "определитель произведения матриц"
+      ],
+      "reason": "Один слайд с доказательством det(AB)=det(A)det(B) через элементарные матрицы и два случая ступенчатого вида.",
+      "limitations": "Не покрыты угол нулей, миноры, разложение, присоединённая/обратная матрицы. Оригинальная историческая запись не получена.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "control-topic-overlap",
+      "left_id": "la2023-control",
+      "right_id": "la2024-control",
+      "status": "partial",
+      "scope": [
+        "СЛУ",
+        "матричные уравнения",
+        "перестановки",
+        "определители",
+        "обратимость"
+      ],
+      "reason": "Общие разделы совпадают, но 4 варианта по6 задач различны: например условие хотя бы3решений заменено подсчётом решений, транспонирование в уравнении заменено AXB, меняются условия перестановок и обратимости.",
+      "limitations": "Сходство тематическое; задания и сложность не признаны взаимозаменяемыми, решения не выполнялись.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "exam-topic-overlap",
+      "left_id": "la2023-exam",
+      "right_id": "la2024-exam",
+      "status": "partial",
+      "scope": [
+        "комплексные числа",
+        "линейная независимость",
+        "подпространства",
+        "базисы",
+        "ранг"
+      ],
+      "reason": "Общие учебные результаты, но различные задачи: многочлены/ФСР/присоединённая матрица2023 против следа/дополнениябазиса/рангасуммы/одновременныхпреобразований2024.",
+      "limitations": "Эквивалентность экзаменов или сложности не установлена; варианты сохраняются отдельно.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "lie-supplement",
+      "left_id": "la2023-lecture1",
+      "right_id": "la2024-sheet1",
+      "status": "additional",
+      "scope": [
+        "углублённые упражнения по матричным алгебрам Ли"
+      ],
+      "reason": "Листок добавляет коммутатор, идеалы, центр, простоту к базовым операциям матриц; полезен как расширение после освоения предпосылок.",
+      "limitations": "Дополнительные темы относительно вводной лекции, не уникальность для учебного года и не замена курса.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "lie-not-rank-replacement",
+      "left_id": "la2023-syllabus13",
+      "right_id": "la2024-sheet1",
+      "status": "rejected",
+      "scope": [
+        "замена блока ранга и критерия совместности"
+      ],
+      "reason": "Листок об алгебрах Ли не содержит заявленных теорем о ранге/Кронекере–Капелли; общий объект матрицы недостаточен.",
+      "limitations": "Отказ касается этой замены; листок полезен как отдельное дополнение.",
+      "reviewer": "Codex lead; independent review pending"
+    },
+    {
+      "id": "scan20-insufficient",
+      "left_id": "la2024-syllabus20",
+      "right_id": "la2023-lecture20",
+      "status": "insufficient_evidence",
+      "scope": [
+        "квадратичные формы и метод Якоби"
+      ],
+      "reason": "Фотоснимок доски получен, но текст не извлечён и не проверен полностью. Сходство подписи и визуальный просмотр не подтверждают покрытие.",
+      "limitations": "Нужна проверенная расшифровка скана; закон инерции присутствует в плане2024, его наличие в скане не подтверждено.",
+      "reviewer": "Codex lead; independent review pending"
+    }
+  ],
+  "ranking_evaluation": {
+    "sample": "5 manually reviewed query/target cases; not random or exhaustive ground truth",
+    "cases": [
+      {
+        "query": "la2023-sheet1",
+        "reviewed_useful_candidate": "la2024-sheet1",
+        "rank": 1
+      },
+      {
+        "query": "la2023-sheet2",
+        "reviewed_useful_candidate": "la2024-sheet2",
+        "rank": 1
+      },
+      {
+        "query": "la2023-lecture1",
+        "reviewed_useful_candidate": "la2024-lecture1",
+        "rank": 1
+      },
+      {
+        "query": "la2023-syllabus6",
+        "reviewed_useful_candidate": "la2024-lecture6",
+        "rank": 4
+      },
+      {
+        "query": "la2023-syllabus7",
+        "reviewed_useful_candidate": "la2024-lecture7",
+        "rank": 8
+      }
+    ],
+    "hit_at_1": 0.6,
+    "hit_at_5": 0.8,
+    "precision_recall": "Not estimated: other candidates not exhaustively labeled; no population accuracy claim"
+  },
+  "limitations": [
+    "Независимая повторная содержательная проверка не завершена: субагент остановлен лимитом сервиса. Решения проверены ведущим агентом по текстам и выбранным оригинальным страницам PDF.",
+    "Это частичная учебная реконструкция; исторические отсутствующие оригиналы не восстановлены."
+  ]
+}

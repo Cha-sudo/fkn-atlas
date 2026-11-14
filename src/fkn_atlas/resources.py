@@ -73,7 +73,7 @@ class Catalog:
         deadline=time.time()+max(exc.retry_after,30*2**max(0,attempts-1)) if exc.retryable else 0
         self.store.db.execute('UPDATE resource_jobs SET state=?,not_before=?,last_error=?,updated_at=? WHERE resource_id=? AND stage=?',
             (state,deadline,str(exc),utc_now(),rid,stage))
-        access='platform_restricted' if exc.state=='platform_restricted' or exc.status==403 else ('not_found' if exc.status==404 else 'transient_error')
+        access='platform_restricted' if exc.state in ('platform_restricted','robots_denied') or exc.status==403 else ('not_found' if exc.status==404 else 'transient_error')
         self.store.db.execute('UPDATE resources SET access=?,updated_at=? WHERE id=?',(access,utc_now(),rid))
         self.store._commit()
 
@@ -224,17 +224,22 @@ class YandexDiskPublicAdapter:
             return {'resource_id':rid,'state':exc.state,'error':str(exc)}
 
 
-def extract_resource(store,rid):
+def extract_resource(store,rid,input_sha256=None):
     from .content import inspect_content
     catalog=Catalog(store);r=catalog.get(rid)
     row=store.db.execute('''SELECT c.sha256,b.path FROM resource_contents c JOIN blobs b ON b.sha256=c.sha256
-      WHERE c.resource_id=? ORDER BY c.retrieved_at DESC LIMIT 1''',(rid,)).fetchone()
+      WHERE c.resource_id=? AND (? IS NULL OR c.sha256=?) ORDER BY c.retrieved_at DESC,c.rowid DESC LIMIT 1''',
+      (rid,input_sha256,input_sha256)).fetchone()
     if not row: raise ValueError('Resource bytes have not been retrieved')
     sha,path=row
     body=(store.path.parent/path).read_bytes()
     if hashlib.sha256(body).hexdigest()!=sha: raise ValueError('Stored content failed SHA256 verification')
     result=inspect_content(body,r['name'])
-    if store.db.execute("SELECT 1 FROM derived_artifacts WHERE resource_id=? AND input_sha256=? AND extractor=? AND state IN ('text_extracted','archive_inspected')",(rid,sha,result['extractor'])).fetchone(): return
+    existing=store.db.execute("SELECT state FROM derived_artifacts WHERE resource_id=? AND input_sha256=? AND extractor=? AND state IN ('text_extracted','archive_inspected')",(rid,sha,result['extractor'])).fetchone()
+    if existing:
+        store.db.execute('UPDATE resources SET content_state=? WHERE id=?',(existing[0],rid))
+        store._commit()
+        return
     with store.transaction():
         for member in result.get('members',[]):
             member_body=member.pop('body',None)

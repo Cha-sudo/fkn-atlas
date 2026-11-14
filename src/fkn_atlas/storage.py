@@ -305,12 +305,16 @@ class Store:
         }
 
     def export(self, target: str):
+        from .reconcile import RECON_TABLES
         path = Path(target)
         if path.resolve() == self.path.resolve() or self.blob_dir.resolve() in path.resolve().parents:
             raise ValueError("Export cannot overwrite the database or evidence")
         path.parent.mkdir(parents=True, exist_ok=True)
+        tables = ("pages", "snapshots", "link_occurrences", "excluded_links", "source_events", "queue", "blobs", "resources", "resource_edges", "resource_observations", "resource_jobs", "resource_contents", "derived_artifacts", "content_reviews")
+        existing = {row[0] for row in self.db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        tables += tuple(table for table in RECON_TABLES if table in existing)
         with path.open("w", encoding="utf-8") as out:
-            for table in ("pages", "snapshots", "link_occurrences", "excluded_links", "source_events", "queue", "blobs", "resources", "resource_edges", "resource_observations", "resource_jobs", "resource_contents", "derived_artifacts", "content_reviews"):
+            for table in tables:
                 cursor = self.db.execute(f"SELECT * FROM {table}")
                 names = [d[0] for d in cursor.description]
                 for row in cursor:
