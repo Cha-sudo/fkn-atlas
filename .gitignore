@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.atlas/
+private/
+seed-probe.html
+*.sqlite*
+*.pdf
+*.mp4
+*.bundle
+.env*
