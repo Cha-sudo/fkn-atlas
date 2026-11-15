@@ -13,7 +13,7 @@
 Все каталоги — соседние в `%USERPROFILE%/Documents/ChatGPT`:
 
 - `fkn-atlas-reboot-20261116` — чистый код, отдельный Git; используйте явно, а не старый каталог handoff.
-- `fkn-atlas-private-20261116` — `atlas.sqlite`, `objects`, `derived`, REPORT.html, pilot-manifest.json, candidate-run.json, annotation-1..6.json, gap-review.json, record_pilot.py, correction-20261116.json. Старые gap-review.json и manifest.review относятся к отозванному решению; актуально последнее решение из SQLite/report.
+- `fkn-atlas-private-20261116` — `atlas.sqlite`, `objects`, `derived`, REPORT.html, pilot-manifest.json, candidate-run.json, annotation-1..6.json, gap-review.json, record_pilot.py, correction-20261116.json. Старый gap-review.json относится к отозванному решению. В pilot-manifest.json поле review обновлено на rejected, withdrawn_review указывает на прежнюю запись; актуально последнее решение из SQLite/report.
 - `fkn-atlas-private-backup-20261116` — проверяемая копия исследовательских данных после закрытия соединений.
 - `fkn-atlas-pre-reboot-20261116.bundle` — старый Git bundle.
 - `fkn-atlas-restore-check-20261116.git` — проверочное восстановление bundle; старые исходники не читать без отдельной задачи.
@@ -33,9 +33,13 @@ $env:ATLAS_HOME = "$env:USERPROFILE/Documents/ChatGPT/fkn-atlas-private-20261116
 
 ## Архив и публикация
 
+Публикация выполнена. Новый корневой коммит `d4aa9cd758894b19a5fae235cbc81f62c20c82a6` имеет пустой список родителей; дерево `2bee9714f0c2f5e9627f69b4dd6714de5f191662` совпало с локально протестированным. `main` переведён через GitHub-коннектор с `expected_sha` старого HEAD и `force=true`, потому что локальный Git не имел credentials. Обновление прошло один раз. Независимый clone подтвердил commit/tree. [CI корневой реализации](https://github.com/Cha-sudo/fkn-atlas/actions/runs/43770388847) завершился success во всех четырёх сочетаниях Windows/Ubuntu и Python 3.11/3.12. Последующий коммит только фиксирует эту квитанцию; актуальный SHA и его CI проверяйте через GitHub.
+
+Приватная резервная копия реально создана: 77 файлов сверены по SHA-256, SQLite integrity/FK и 23 оригинальных объекта проверены в восстановленной копии. `backup-manifest.json` лежит в backup-каталоге. Она расположена на том же физическом ПК; копирование на второй носитель ещё не выполнялось.
+
 Исходный main: `7b46c8afa4794058802c62733e27a748b91c8367`. Архивная ветка `archive/pre-reboot-20261116` создана через подключённый GitHub; проверен доступ admin/push. Bundle SHA-256: `c5f9f6d41a20f6e937bb4767d563eb5689bc70e294f5e2b34514be5cce523081`. `git bundle verify`, восстановление в отдельный bare-репозиторий, `git fsck --full` и совпадение HEAD прошли. Архив не удалять. Старые вложения и код не читались.
 
-Авторизация пользователя на замену main дана явно; повторное подтверждение не требуется. Корневая история подготовлена с нуля. Для первой замены допускается только lease на указанный старый SHA. После первой успешной замены далее используйте обычные fast-forward-коммиты. Всегда проверяйте фактический remote HEAD и CI; не полагайтесь на текст этого файла вместо проверки.
+Авторизация пользователя на замену main была дана явно. Замена уже выполнена, повторять force-update не нужно. Теперь используйте обычные fast-forward-коммиты. Всегда проверяйте фактический remote HEAD и CI; не полагайтесь на текст этого файла вместо проверки.
 
 ## Следующий конкретный шаг
 
