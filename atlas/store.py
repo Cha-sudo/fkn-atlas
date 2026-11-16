@@ -244,11 +244,17 @@ class Store:
             self.db.execute("INSERT INTO attempts(resource_id,at,status,http_status,error,snapshot_id) VALUES(?,?,?,?,?,?)",
                             (rid,time.time(),status,http_status,error,sid))
 
+    def _enqueue_new(self, jobs, due):
+        """Insert discovered jobs inside the caller's transaction."""
+        self.db.executemany('''INSERT OR IGNORE INTO jobs(id,resource_id,state,due)
+            SELECT ?,?,CASE WHEN EXISTS (SELECT 1 FROM snapshots WHERE resource_id=?)
+                THEN 'done' ELSE 'pending' END,?''',
+            ((ident, rid, rid, due) for ident, rid in jobs))
+
     def enqueue(self, rid, refresh=False):
         ident = uid("fetch",rid)
-        obtained = bool(self.rows('SELECT id FROM snapshots WHERE resource_id=?',(rid,)))
         with self.db:
-            self.db.execute("INSERT OR IGNORE INTO jobs(id,resource_id,state,due) VALUES(?,?,?,?)",(ident,rid,'done' if obtained else 'pending',time.time()))
+            self._enqueue_new([(ident,rid)], time.time())
             if refresh:
                 self.db.execute("UPDATE jobs SET state='pending',tries=0,due=?,token=NULL,lease_until=NULL,refresh=1 WHERE id=? AND state!='running'",(time.time(),ident))
                 if not self.db.execute("SELECT 1 FROM jobs WHERE id=? AND state='running'",(ident,)).fetchone():

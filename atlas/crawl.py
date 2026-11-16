@@ -68,9 +68,13 @@ class Crawl:
 
     def admit(self, rid, depth):
         with self.store.db:
-            self.store.db.execute('''INSERT INTO frontier VALUES(?,?,?) ON CONFLICT(scope_id,resource_id)
-                DO UPDATE SET depth=min(depth,excluded.depth)''',(self.id,rid,depth))
-        self.store.enqueue(rid)
+            self._admit_batch({rid:depth})
+
+    def _admit_batch(self, depths):
+        self.store.db.executemany('''INSERT INTO frontier VALUES(?,?,?) ON CONFLICT(scope_id,resource_id)
+            DO UPDATE SET depth=excluded.depth WHERE excluded.depth<frontier.depth''',
+            ((self.id,rid,depth) for rid,depth in depths.items()))
+        self.store._enqueue_new(((uid('fetch',rid),rid) for rid in depths),time.time())
 
     def ids(self):
         return {r['resource_id'] for r in self.store.rows('SELECT resource_id FROM frontier WHERE scope_id=? AND depth<=?',(self.id,self.max_depth))}
@@ -100,21 +104,33 @@ class Crawl:
         links=self.store.rows('''SELECT o.*,r.url,coalesce(c.navigation,0) AS navigation FROM occurrences o
             JOIN resources r ON r.id=o.target_id LEFT JOIN link_context c ON c.occurrence_id=o.id
             WHERE o.snapshot_id=? ORDER BY o.path''',(row['sid'],))
-        count=len(self.ids()); known=self.ids()
-        for link in links:
-            state,reason=classify(link,row['url'])
-            depth=row['depth']+1
-            if state=='admitted' and depth>self.max_depth:
-                state,reason='pending','depth_limit'
-            if state=='admitted' and link['target_id'] not in known and count>=self.max_frontier:
-                state,reason='pending','frontier_limit'
-            if state=='admitted':
-                self.admit(link['target_id'],depth)
-                if link['target_id'] not in known: count+=1; known.add(link['target_id'])
-            with self.store.db:
-                self.store.db.execute('''INSERT INTO crawl_edges VALUES(?,?,?,?,?,?,?)
-                    ON CONFLICT(scope_id,occurrence_id) DO UPDATE SET depth=excluded.depth,state=excluded.state,reason=excluded.reason''',
-                    (self.id,link['id'],row['resource_id'],link['target_id'],depth,state,reason))
+        if not links:
+            return
+        depth = row['depth']+1
+        with self.store.db:
+            # Keep the frontier limit and its recorded decisions consistent if another worker
+            # is writing the same scope. No network or document processing inside this lock.
+            self.store.db.execute('BEGIN IMMEDIATE')
+            known = self.ids()
+            admissions = {}
+            decisions = []
+            for link in links:
+                target = link['target_id']
+                state,reason = classify(link,row['url'])
+                if state=='admitted' and depth>self.max_depth:
+                    state,reason='pending','depth_limit'
+                elif state=='admitted' and target not in known and len(known)>=self.max_frontier:
+                    state,reason='pending','frontier_limit'
+                if state=='admitted':
+                    admissions[target] = depth
+                    known.add(target)
+                decisions.append((self.id,link['id'],row['resource_id'],target,depth,state,reason))
+            self._admit_batch(admissions)
+            self.store.db.executemany('''INSERT INTO crawl_edges VALUES(?,?,?,?,?,?,?)
+                ON CONFLICT(scope_id,occurrence_id) DO UPDATE
+                SET depth=excluded.depth,state=excluded.state,reason=excluded.reason
+                WHERE (crawl_edges.depth,crawl_edges.state,crawl_edges.reason)
+                    != (excluded.depth,excluded.state,excluded.reason)''', decisions)
 
     def summary(self):
         return {'scope_id':self.id,'policy':POLICY,'max_depth':self.max_depth,

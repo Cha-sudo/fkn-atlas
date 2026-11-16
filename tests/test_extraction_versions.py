@@ -49,3 +49,27 @@ def test_pdf_warnings_are_bounded_persisted_and_logger_restored(tmp_path,monkeyp
     assert parent.propagate==old
     assert s.rows('SELECT quality FROM chunks')[0]['quality']=='needs_visual_review'
     s.db.close()
+
+
+def test_dataset_reprocessing_hides_rows_from_search_preserving_old_anchors(tmp_path, monkeypatch):
+    from atlas.ingest import stored_asset_status
+
+    s = Store(tmp_path)
+    rid = s.resource('https://example.org/teaching/data.csv?version=1')
+    original = b'matrix,cohort\n1,A\n2,B\n'
+    snapshot = s.snapshot(rid, original, 'text/plain')
+    with monkeypatch.context() as legacy:
+        legacy.setattr('atlas.ingest.stored_asset_status', lambda *args: None)
+        assert extract(s, snapshot) == 'text_extracted'
+    old = candidates(s, 'matrix')[0]
+    assert extract(s, snapshot) == 'text_extracted'
+    assert extract(s, snapshot, reprocess=True) == 'dataset_stored_unread'
+    assert extract(s, snapshot, reprocess=True) == 'dataset_stored_unread'
+    assert candidates(s, 'matrix') == []
+    validate_anchors(s, [{'chunk_id': old['id'], 'quote':'matrix,cohort'}])
+    assert s.object_path(old['sha']).read_bytes() == original
+    assert stored_asset_status('text/html', 'data.csv', b'<html>') is None
+    drawing = s.snapshot(s.resource('https://example.org/figure.eps'), b'%!PS-Adobe-3.0 EPSF-3.0', 'text/plain')
+    assert extract(s,drawing) == 'postscript_stored_unrendered'
+    assert not s.rows('SELECT 1 FROM chunks c JOIN extractions e ON e.id=c.extraction_id WHERE e.snapshot_id=?', (drawing,))
+    s.db.close()

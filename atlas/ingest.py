@@ -12,7 +12,7 @@ import logging
 from contextlib import contextmanager
 from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit, quote
+from urllib.parse import urljoin, urlsplit, quote, unquote
 from bs4 import BeautifulSoup, Tag
 from pypdf import PdfReader
 from .store import uid
@@ -23,6 +23,7 @@ try:
 except PackageNotFoundError:
     FONT_VERSION = 'absent'
 PDF_ENGINE = 'atlas-pdf-2;pypdf='+version('pypdf')+';fonttools='+FONT_VERSION
+ASSET_ENGINE = 'atlas-asset-inventory-1'
 MAX_PARSE_BYTES = 32*1024*1024
 
 
@@ -114,11 +115,30 @@ def html_structure(store, sid, data, base):
             if r[4] in {"p","tr","li","h1","h2","h3","h4"} and r[6]]
 
 
+def stored_asset_status(mime, name, prefix):
+    """Identify non-prose formats without executing or previewing the payload."""
+    if ('html' in mime or prefix.lstrip().lower().startswith((b'<!doctype html', b'<html'))
+            or prefix.startswith((b'%PDF', b'PK\x03\x04'))):
+        return None
+    suffix = Path(name).suffix.lower()
+    if (suffix in {'.eps', '.ps'} or mime == 'application/postscript'
+            or prefix.startswith(b'%!PS-Adobe-')):
+        return 'postscript_stored_unrendered'
+    if suffix in {'.csv', '.tsv', '.parquet', '.feather'} or mime in {
+            'text/csv', 'text/tab-separated-values', 'application/vnd.apache.parquet'}:
+        return 'dataset_stored_unread'
+    return None
+
+
 def extract(store, sid, reprocess=False):
     row = store.rows("SELECT * FROM snapshots WHERE id=?",(sid,))[0]
     path=store.object_path(row['sha'])
-    with path.open('rb') as f: prefix=f.read(32)
-    engine=PDF_ENGINE if prefix.startswith(b'%PDF') else ENGINE
+    with path.open('rb') as f: prefix=f.read(256)
+    mime = row['mime'].split(';')[0].lower()
+    original = store.rows('SELECT original_name FROM retrieval_metadata WHERE snapshot_id=?', (sid,))
+    name = (original[0]['original_name'] if original else None) or unquote(urlsplit(row['final_url']).path)
+    inventory = stored_asset_status(mime, name, prefix)
+    engine = ASSET_ENGINE if inventory else PDF_ENGINE if prefix.startswith(b'%PDF') else ENGINE
     eid = uid(sid,engine)
     old = store.rows("SELECT status FROM extractions WHERE id=?",(eid,))
     if old:
@@ -126,15 +146,16 @@ def extract(store, sid, reprocess=False):
     previous=store.rows('SELECT status FROM extractions WHERE snapshot_id=? ORDER BY created DESC LIMIT 1',(sid,))
     if previous and not reprocess:
         return previous[0]['status']  # Parser upgrade never silently reprocesses the corpus.
-    mime = row["mime"].split(";")[0].lower()
     media=(mime.startswith(('video/','audio/')) or prefix[4:8]==b'ftyp'
            or urlsplit(row['final_url']).path.lower().endswith(('.mp4','.webm','.mkv','.mp3','.wav','.flac','.ogg','.mov','.m4a')))
     oversized=path.stat().st_size>MAX_PARSE_BYTES
-    data=b'' if media or oversized else path.read_bytes()
+    data=b'' if inventory or media or oversized else path.read_bytes()
     chunks = []
     diagnostics=None
     status = "unsupported"
-    if media:
+    if inventory:
+        status = inventory
+    elif media:
         status='media_untranscribed'
     elif oversized:
         status='archive_stored_unread' if prefix[:2]==b'PK' or 'zip' in mime else 'extraction_deferred_size'
