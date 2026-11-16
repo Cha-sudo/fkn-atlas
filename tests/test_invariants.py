@@ -254,6 +254,28 @@ def test_retracted_decision_is_history_only(s,tmp_path):
     assert s.rows('SELECT status FROM lessons')[0]['status']=='listed_without_link'
 
 
+def test_private_catalog_shows_plan_and_link_state(s, tmp_path):
+    from bs4 import BeautifulSoup
+    from atlas.presentation import write_catalog
+
+    rid, snapshot = html(s, '<main><p>Written plan <a href="/missing.pdf">Handout</a></p></main>')
+    node = s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'", (snapshot,))[0]['id']
+    version = add_version(s, 'Program', '2024', 'Course', 'Stream', snapshot, node)
+    lesson = add_lesson(s, version, 'Lecture 1', 1, ['Subtopic'], 'unverified', node)
+    edge = s.rows('SELECT id,target_id FROM occurrences WHERE snapshot_id=?', (snapshot,))[0]
+    with s.db:
+        s.db.execute('INSERT INTO lesson_materials VALUES(?,?,?)',(lesson,edge['target_id'],edge['id']))
+    output = tmp_path / 'catalog.html'
+    result = write_catalog(s, output)
+    page = BeautifulSoup(output.read_text('utf8'), 'html.parser')
+    assert (result['programs'],result['versions'],result['lessons']) == (1,1,1)
+    registered = page.find(id='lesson-'+lesson)
+    assert 'Subtopic' in registered.get_text()
+    assert 'снимок не получен' in registered.get_text()
+    assert registered.find('a',string='Handout')['href'].endswith('/missing.pdf')
+    assert page.find(id='v-'+version)
+
+
 def test_same_course_historical_evidence_is_allowed(s):
     lid,c=plan(s)
     target=s.rows('SELECT * FROM versions')[0]

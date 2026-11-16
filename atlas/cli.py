@@ -28,6 +28,7 @@ def main():
     sub.add_parser('resume',help='Requeue a deferred/retry job preserving .part').add_argument('resource_id')
     sub.add_parser('frontier').add_argument('--limit',type=int,default=100)
     sub.add_parser('library').add_argument('output')
+    sub.add_parser('catalog',help='Write the private program and course catalog as HTML').add_argument('output')
     links=sub.add_parser("links"); links.add_argument("--contains",default=""); links.add_argument("--limit",type=int,default=30)
     follow=sub.add_parser("follow"); follow.add_argument("resource_id"); follow.add_argument("--refresh",action="store_true")
     imp=sub.add_parser("import"); imp.add_argument("path"); imp.add_argument("--source-url")
@@ -76,6 +77,9 @@ def main():
     elif args.command=='library':
         from .presentation import write_library
         out=write_library(s,args.output)
+    elif args.command=='catalog':
+        from .presentation import write_catalog
+        out=write_catalog(s,args.output)
     elif args.command=="links": out=s.rows("SELECT o.*,r.url,r.provider FROM occurrences o JOIN resources r ON r.id=o.target_id WHERE o.label LIKE ? OR o.context LIKE ? OR r.url LIKE ? LIMIT ?",("%"+args.contains+"%",)*3+(args.limit,))
     elif args.command=="follow":
         if not s.rows("SELECT id FROM occurrences WHERE target_id=?",(args.resource_id,)): p.error("follow requires an observed educational link; use seed for explicit sources")

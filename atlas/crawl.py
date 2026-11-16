@@ -11,6 +11,9 @@ EDUCATION = re.compile(r'лекци|семинар|учеб|курс|матер�
 DOCUMENT = re.compile(r'\.(pdf|djvu|docx?|pptx?|xlsx?|tex|txt|md|ipynb|py|cpp|c|h|r|jl|zip|tar|gz|mp4|webm|mp3|wav|ogg|flac|png|jpe?g|svg|vtt|srt)$', re.I)
 SERVICE = re.compile(r'(?:^|[/?:=_-])(login|logout|signin|signout|signup|register|calendar|search|feed|rss|wp-admin)(?:$|[/?:=_-])', re.I)
 NAMESPACE = re.compile(r'/wiki/(Special|Служебная|User|Участник|User_talk|Обсуждение|Talk|Category|Категория|Template|Шаблон|MediaWiki):', re.I)
+GRADE_SECTION = re.compile(
+    r'^(?:текущие оценки|итоговые оценки|результаты студентов|current results|'
+    r'current grades|final grades|student results)(?:\s*[:.])?$', re.I)
 
 
 def classify(link, source_url):
@@ -20,7 +23,9 @@ def classify(link, source_url):
         return 'excluded', 'unsafe_scheme_or_port'
     if link.get('navigation'):
         return 'excluded', 'navigation'
-    if re.search(r'ведомост|оценки студентов|student grades',link['headings']+' '+link['label'],re.I):
+    if (re.search(r'ведомост|оценки студентов|student grades',link['headings']+' '+link['label'],re.I)
+            or any(GRADE_SECTION.fullmatch(label.strip())
+                   for label in [*json.loads(link['headings']), link['label']])):
         return 'excluded', 'administrative_records'
     if p.hostname in {'t.me','telegram.me'} or (re.search(r'преподавател|ассистент',link['headings'],re.I) and not EDUCATION.search(link['label'])):
         return 'pending', 'contact_not_teaching_content'

@@ -1,9 +1,118 @@
 """Private readable report; escaped source text and no embedded source scripts."""
 import html
+from itertools import groupby
 import json
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
 from .research import report
+
+
+LESSON_LABELS = {
+    'not_in_plan': 'Не входит в план',
+    'listed_without_link': 'В записи нет ссылки',
+    'link_unavailable': 'Доступ по ссылке не подтверждён после проверки',
+    'obtained_unread': 'Источник получен, содержание не проверено',
+    'partial': 'Проверена часть содержания',
+    'unverified': 'Не проверено',
+    'content_checked': 'Содержание проверено в указанном объёме',
+}
+
+
+def write_catalog(store, output):
+    """Browse confirmed course identities alongside the actual registered plan rows."""
+    escape = html.escape
+    versions = store.rows('''SELECT v.*, r.url, s.sha, n.path FROM versions v
+        JOIN snapshots s ON s.id=v.source_snapshot JOIN resources r ON r.id=s.resource_id
+        JOIN nodes n ON n.id=v.evidence_node ORDER BY v.program,v.year DESC,v.course,v.stream,v.id''')
+    pieces = [
+        '<!doctype html><html lang="ru"><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        '<title>ФКН Атлас — учебный каталог</title>',
+        '<style>body{font:16px/1.55 system-ui;max-width:1040px;margin:36px auto;padding:0 20px;color:#172c36}'
+        'section{margin:24px 0}summary{cursor:pointer}details{margin:10px 0;padding-left:12px;border-left:2px solid #a6b9ba}'
+        'summary:focus-visible,a:focus-visible{outline:2px solid #176d70}code{overflow-wrap:anywhere}'
+        'a{color:#125d63}small{color:#435d65}p{margin:0.6em 0}</style>',
+        '<h1>Учебный каталог ФКН Атласа</h1>'
+        '<p>Каталог содержит проверенные привязки к программе и году. '
+        'Состояние занятия относится к зафиксированному объёму проверки.</p>',
+    ]
+    programs = sorted({version['program'] for version in versions})
+    if programs:
+        pieces.append('<nav aria-label="Программы"><ul>'+''.join(
+            f'<li><a href="#program-{i}">{escape(name)}</a></li>' for i,name in enumerate(programs)
+        )+'</ul></nav>')
+    else:
+        pieces.append('<p>Версии курсов ещё не зарегистрированы.</p>')
+    count_lessons = 0
+    for i, (program, group) in enumerate(groupby(versions, key=lambda row: row['program'])):
+        pieces.append(f'<section id="program-{i}"><h2>{escape(program)}</h2>')
+        for year, yearly in groupby(group, key=lambda row: row['year']):
+            pieces.append(f'<h3>{escape(year)}</h3>')
+            for version in yearly:
+                lessons = store.rows('SELECT * FROM lessons WHERE version_id=? ORDER BY position,id',(version['id'],))
+                count_lessons += len(lessons)
+                title = f'{version["course"]} · {version["stream"]}'
+                pieces.append(f'<details id="v-{escape(version["id"])}"><summary>{escape(title)} · '
+                              f'{len(lessons)} записей плана</summary>'
+                              f'<p><a href="{escape(version["url"])}">Страница версии</a> · '
+                              f'<code>{escape(version["path"])}</code><br>'
+                              f'<small>SHA-256 <code>{escape(version["sha"])}</code></small></p>')
+                if not lessons:
+                    pieces.append('<p>Занятия для этой версии пока не внесены в каталог.</p>')
+                for lesson in lessons:
+                    _catalog_lesson(store, lesson, pieces)
+                materials = store.rows('''SELECT s.id,s.sha,r.url,m.original_name,b.reason
+                    FROM version_snapshots b JOIN snapshots s ON s.id=b.snapshot_id
+                    JOIN resources r ON r.id=s.resource_id
+                    LEFT JOIN retrieval_metadata m ON m.snapshot_id=s.id
+                    WHERE b.version_id=? ORDER BY r.url,s.created''',(version['id'],))
+                if materials:
+                    pieces.append('<details><summary>Проверенные привязки материалов к версии</summary><ul>')
+                    for material in materials:
+                        name = material['original_name'] or unquote(urlsplit(material['url']).path.rsplit('/',1)[-1])
+                        pieces.append(f'<li><a href="{escape(material["url"])}">{escape(name or "Источник")}</a>'
+                                      f'<p>{escape(material["reason"])}</p><small>Снимок '
+                                      f'<code>{escape(material["id"])}</code><br>SHA-256 '
+                                      f'<code>{escape(material["sha"])}</code></small></li>')
+                    pieces.append('</ul></details>')
+                pieces.append('</details>')
+        pieces.append('</section>')
+    pieces.append('</html>')
+    target = Path(output).resolve()
+    target.write_text('\n'.join(pieces),encoding='utf8',newline='\n')
+    return {'output':str(target),'programs':len(programs),'versions':len(versions),'lessons':count_lessons}
+
+
+def _catalog_lesson(store, lesson, pieces):
+    escape = html.escape
+    label = LESSON_LABELS.get(lesson['status'], lesson['status'])
+    pieces.append(f'<details id="lesson-{escape(lesson["id"])}"><summary>{escape(lesson["label"])}'
+                  f' · {escape(label)}</summary>')
+    if lesson['notes']:
+        pieces.append(f'<p>{escape(lesson["notes"])}</p>')
+    topics = json.loads(lesson['topics'])
+    if topics:
+        pieces.append('<ul>'+''.join(f'<li>{escape(topic)}</li>' for topic in topics)+'</ul>')
+    links = store.rows('''SELECT r.url,o.label,o.path,o.context,j.state,
+        (SELECT count(*) FROM snapshots s WHERE s.resource_id=r.id) AS captures
+        FROM lesson_materials m JOIN resources r ON r.id=m.resource_id
+        LEFT JOIN occurrences o ON o.id=m.occurrence_id LEFT JOIN jobs j ON j.resource_id=r.id
+        WHERE m.lesson_id=? ORDER BY o.path,r.url''',(lesson['id'],))
+    if links:
+        pieces.append('<ul>')
+        for link in links:
+            state = 'снимков: '+str(link['captures']) if link['captures'] else 'снимок не получен'
+            if link['state']:
+                state += ' · очередь: '+link['state']
+            locator = f' · {link["path"]}' if link['path'] else ''
+            pieces.append(f'<li><a href="{escape(link["url"])}">{escape(link["label"] or "Материал")}</a> '
+                          f'<small>{escape(state+locator)}</small>')
+            if link['context'] and link['context'] != link['label']:
+                pieces.append('<details><summary>Контекст ссылки</summary>'
+                              f'<p>{escape(link["context"])}</p></details>')
+            pieces.append('</li>')
+        pieces.append('</ul>')
+    pieces.append('</details>')
 
 
 def write_library(store, output):

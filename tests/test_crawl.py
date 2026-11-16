@@ -153,5 +153,10 @@ def test_contacts_records_unknown_links_and_drive_are_not_downloaded(s):
     assert classify(base,'https://example.org/course')[0]=='pending'
     assert classify({**base,'headings':'["Ведомости текущего контроля"]'},'https://example.org/course')[0]=='excluded'
     assert classify({**base,'headings':'["Формула оценивания"]','label':'Ведомость'},'https://example.org/course')==('excluded','administrative_records')
+    for title in ('Текущие оценки', 'Итоговые оценки', 'Current Results'):
+        grade_sheet = {**base, 'url':'https://example.org/table.xlsx', 'headings':json.dumps([title])}
+        assert classify(grade_sheet,'https://example.org/course') == ('excluded','administrative_records')
+    rubric = {**base, 'url':'https://example.org/rubric.pdf', 'headings':'["Grading system"]'}
+    assert classify(rubric,'https://example.org/course')[0] == 'admitted'
     assert classify({**base,'url':'https://drive.google.com/drive/folders/fixture','label':'Lecture notes','headings':'[]'},'https://example.org/course')==('pending','drive_listing_adapter_unavailable')
     assert classify({**base,'headings':'[]','label':'Other'},'https://example.org/course')==('pending','educational_relation_uncertain')
