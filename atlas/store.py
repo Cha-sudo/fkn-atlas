@@ -102,6 +102,29 @@ CREATE TABLE IF NOT EXISTS comparisons(
  dimensions TEXT NOT NULL,reason TEXT NOT NULL,limitations TEXT NOT NULL,created REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS trajectories(
  id TEXT PRIMARY KEY,title TEXT NOT NULL,revision INTEGER NOT NULL,plan TEXT NOT NULL,created REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS crawl_scopes(
+ id TEXT PRIMARY KEY,root_id TEXT NOT NULL REFERENCES resources(id),policy TEXT NOT NULL,created REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS frontier(
+ scope_id TEXT NOT NULL REFERENCES crawl_scopes(id),resource_id TEXT NOT NULL REFERENCES resources(id),
+ depth INTEGER NOT NULL,PRIMARY KEY(scope_id,resource_id));
+CREATE TABLE IF NOT EXISTS crawl_edges(
+ scope_id TEXT NOT NULL REFERENCES crawl_scopes(id),occurrence_id TEXT NOT NULL REFERENCES occurrences(id),
+ parent_id TEXT NOT NULL REFERENCES resources(id),target_id TEXT NOT NULL REFERENCES resources(id),
+ depth INTEGER NOT NULL,state TEXT NOT NULL,reason TEXT NOT NULL,
+ PRIMARY KEY(scope_id,occurrence_id));
+CREATE TABLE IF NOT EXISTS link_context(
+ occurrence_id TEXT PRIMARY KEY REFERENCES occurrences(id),navigation INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS provider_contexts(
+ resource_id TEXT PRIMARY KEY REFERENCES resources(id),context TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS provider_states(
+ snapshot_id TEXT PRIMARY KEY REFERENCES snapshots(id),state TEXT NOT NULL,details TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS crawl_runs(
+ id TEXT PRIMARY KEY,scope_id TEXT NOT NULL REFERENCES crawl_scopes(id),created REAL NOT NULL,result TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS version_materials(
+ version_id TEXT NOT NULL REFERENCES versions(id),resource_id TEXT NOT NULL REFERENCES resources(id),
+ reason TEXT NOT NULL,reviewer TEXT NOT NULL,PRIMARY KEY(version_id,resource_id));
+CREATE TABLE IF NOT EXISTS retrieval_metadata(
+ snapshot_id TEXT PRIMARY KEY REFERENCES snapshots(id),original_name TEXT NOT NULL);
 """
 
 
@@ -115,6 +138,9 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
+        if 'refresh' not in {r[1] for r in self.db.execute('PRAGMA table_info(jobs)')}:
+            self.db.execute('ALTER TABLE jobs ADD COLUMN refresh INTEGER NOT NULL DEFAULT 0')
+        self.db.execute("UPDATE meta SET value='2' WHERE key='schema'")
         self.db.commit()
 
     def rows(self, sql, args=()):
@@ -163,18 +189,27 @@ class Store:
 
     def enqueue(self, rid, refresh=False):
         ident = uid("fetch",rid)
+        obtained = bool(self.rows('SELECT id FROM snapshots WHERE resource_id=?',(rid,)))
         with self.db:
-            self.db.execute("INSERT OR IGNORE INTO jobs(id,resource_id,state,due) VALUES(?,?,'pending',?)",(ident,rid,time.time()))
+            self.db.execute("INSERT OR IGNORE INTO jobs(id,resource_id,state,due) VALUES(?,?,?,?)",(ident,rid,'done' if obtained else 'pending',time.time()))
             if refresh:
-                self.db.execute("UPDATE jobs SET state='pending',tries=0,due=?,token=NULL,lease_until=NULL WHERE id=? AND state!='running'",(time.time(),ident))
+                self.db.execute("UPDATE jobs SET state='pending',tries=0,due=?,token=NULL,lease_until=NULL,refresh=1 WHERE id=? AND state!='running'",(time.time(),ident))
         return ident
 
-    def claim(self, lease_seconds=180, allowed_hosts=None):
+    def claim(self, lease_seconds=180, allowed_hosts=None, resource_ids=None, acquisition_first=False):
         now = time.time()
         self.db.execute("BEGIN IMMEDIATE")
         try:
             eligible = self.db.execute("SELECT j.*,r.url FROM jobs j JOIN resources r ON r.id=j.resource_id WHERE (state IN ('pending','retry') AND due<=?) OR (state='running' AND lease_until<?) ORDER BY due",(now,now)).fetchall()
-            row = next((r for r in eligible if allowed_hosts is None or urlsplit(r['url']).hostname in allowed_hosts),None)
+            if acquisition_first:
+                import re
+                def priority(row):
+                    p=urlsplit(row['url'])
+                    file_link=p.hostname in {'raw.githubusercontent.com','downloader.disk.yandex.ru'} or re.search(r'\.(pdf|docx?|pptx?|ipynb|tex|txt|zip|mp4|webm|png|jpe?g)$',p.path,re.I)
+                    return (not bool(file_link),row['due'])
+                eligible.sort(key=priority)
+            row = next((r for r in eligible if (allowed_hosts is None or urlsplit(r['url']).hostname in allowed_hosts)
+                        and (resource_ids is None or r['resource_id'] in resource_ids)),None)
             if not row:
                 self.db.commit()
                 return None

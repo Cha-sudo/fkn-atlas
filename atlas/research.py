@@ -64,14 +64,33 @@ def candidates(store, query, limit=10, exclude_resource=None, include_plans=Fals
 
 
 def source_belongs_to_version(store, chunk_id, version_id):
-    target=store.rows('SELECT s.resource_id FROM chunks c JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id WHERE c.id=?',(chunk_id,))
-    if not target: return False
+    # Crawling can reach another course through menus or cross references. Reachability
+    # is provenance only; curriculum membership requires a separate reviewed binding.
+    return bool(store.rows('''SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id
+        JOIN snapshots s ON s.id=e.snapshot_id JOIN versions v ON v.id=?
+        WHERE c.id=? AND (s.id=v.source_snapshot OR EXISTS (
+        SELECT 1 FROM version_materials m WHERE m.version_id=v.id AND m.resource_id=s.resource_id))''',
+        (version_id,chunk_id)))
+
+
+def bind_material(store, version_id, resource_id, reason, reviewer):
+    if not reason.strip() or not reviewer.strip():
+        raise ValueError('A reviewed curriculum binding needs reason and reviewer')
+    if not resource_reachable_from_version(store, resource_id, version_id):
+        raise ValueError('Binding requires an observed provenance path; this is not proof of content fit')
+    with store.db:
+        store.db.execute('INSERT INTO version_materials VALUES(?,?,?,?)',
+                         (version_id,resource_id,reason,reviewer))
+    return {'version_id':version_id,'resource_id':resource_id,'content_fit':'unverified'}
+
+
+def resource_reachable_from_version(store, resource_id, version_id):
     reachable=store.rows('''WITH RECURSIVE edges(source,target) AS (
         SELECT s.resource_id,o.target_id FROM occurrences o JOIN snapshots s ON s.id=o.snapshot_id
         UNION SELECT source_id,target_id FROM source_edges), reached(id) AS (
         SELECT s.resource_id FROM versions v JOIN snapshots s ON s.id=v.source_snapshot WHERE v.id=?
         UNION SELECT edges.target FROM edges JOIN reached ON edges.source=reached.id)
-        SELECT id FROM reached WHERE id=?''',(version_id,target[0]['resource_id']))
+        SELECT id FROM reached WHERE id=?''',(version_id,resource_id))
     return bool(reachable)
 
 
@@ -100,14 +119,14 @@ def review(store, lesson_id, verdict, covered, uncovered, reason, reviewer, evid
             raise ValueError("Independent source check method required")
         source_vid=item.get('source_version_id',target_version['id'])
         if not source_belongs_to_version(store,item['chunk_id'],source_vid):
-            raise ValueError('Evidence needs a source version with a traceable provenance path')
+            raise ValueError('Evidence needs a reviewed source-version binding; link reachability alone is insufficient')
         source_version=store.rows('SELECT * FROM versions WHERE id=?',(source_vid,))[0]
         cross_course=any(source_version[k]!=target_version[k] for k in ('program','course'))
         if cross_course and verdict in {'confirmed_scope','partial'}:
-            authorization=transfer_authorization or {}
-            nodes=store.rows('SELECT text FROM nodes WHERE id=? AND snapshot_id=?',(authorization.get('node_id'),target_version['source_snapshot']))
-            if not nodes or not authorization.get('quote') or authorization['quote'] not in nodes[0]['text'] or not authorization.get('reason'):
-                raise ValueError('Cross-course replacement requires an explicit instruction in the target course source; otherwise supplementary reading only')
+            # An exact quote proves provenance, not that a transfer is authorized.
+            # Fail closed until a separately reviewed, donor- and scope-bound
+            # authorization workflow exists. Never accept arbitrary quote+reason.
+            raise ValueError('Cross-course replacement is unavailable: a reviewed donor- and scope-bound authorization is not implemented; supplementary reading only')
         item={**item,'source_version_id':source_vid}
         validated.append(item)
     with store.db:
@@ -132,6 +151,8 @@ def report(store):
         "lesson_states":store.rows("SELECT status,count(*) AS n FROM lessons GROUP BY status"),
         "latest_decisions":store.rows("SELECT r.* FROM reviews r WHERE version=(SELECT max(version) FROM reviews WHERE lesson_id=r.lesson_id)"),
         "queue":store.rows("SELECT state,count(*) AS n FROM jobs GROUP BY state"),
+        "crawl_edges":store.rows("SELECT state,reason,count(*) AS n FROM crawl_edges GROUP BY state,reason"),
+        "provider_states":store.rows("SELECT state,count(*) AS n FROM provider_states GROUP BY state"),
         "providers":store.rows("SELECT provider,count(*) AS n FROM resources GROUP BY provider")}
 
 

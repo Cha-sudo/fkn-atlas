@@ -35,3 +35,18 @@ def test_route_requires_prerequisites_and_pins_assessments(tmp_path):
     compare(s,fragment['fragment_id'],fragment['fragment_id'],'insufficient_data',['clarity'],'No second source','Test only')
     with pytest.raises(ValueError): compare(s,fragment['fragment_id'],fragment['fragment_id'],'best_overall',['size'],'Larger','None')
     s.db.close()
+
+
+def test_comparison_cannot_infer_course_from_link_reachability(tmp_path):
+    from atlas.research import add_version,bind_material
+    s,args=setup(tmp_path)
+    rid=s.resource('https://example.org/course')
+    sid=s.snapshot(rid,b'<main><p>Course A <a href="/material">Lecture</a></p></main>','text/html'); extract(s,sid)
+    node=s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'",(sid,))[0]['id']
+    vid=add_version(s,'A','2024','Course A','A',sid,node)
+    fragment=annotate(s,**args)['fragment_id']
+    with pytest.raises(ValueError,match='reviewed bindings'):
+        compare(s,fragment,fragment,'partial_replacement',['content'],'Self comparison cannot infer course','Fixture')
+    bind_material(s,vid,s.resource('https://example.org/material'),'Manually checked course membership','reviewer')
+    compare(s,fragment,fragment,'partial_replacement',['content'],'Identity fixture after binding','No content fit inferred automatically')
+    s.db.close()

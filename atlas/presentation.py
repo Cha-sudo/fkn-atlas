@@ -2,7 +2,33 @@
 import html
 import json
 from pathlib import Path
+from urllib.parse import urlsplit, unquote
 from .research import report
+
+
+def write_library(store, output):
+    """Private local file navigation. Acquisition, extraction and review stay separate."""
+    esc=lambda x:html.escape(str(x),quote=True)
+    rows=store.rows('''SELECT s.*,r.url,b.size,m.original_name FROM snapshots s JOIN resources r ON r.id=s.resource_id
+        JOIN blobs b ON b.sha=s.sha LEFT JOIN retrieval_metadata m ON m.snapshot_id=s.id ORDER BY s.created''')
+    blocks=['<!doctype html><html lang="ru"><meta charset="utf-8"><title>ФКН Атлас — локальные оригиналы</title>',
+            '<style>body{font:16px/1.5 system-ui;margin:32px}table{border-collapse:collapse;width:100%}td,th{padding:12px;border:1px solid #ddd;text-align:left}code{overflow-wrap:anywhere}details{max-width:500px}</style>',
+            '<h1>Локальные оригиналы</h1><p>Сохранённые байты открываются по ссылке на файл. Метаданные провайдера и страницы каталога не означают получения всех материалов. Проверка отдельных фрагментов не означает проверки всего файла. Не публикуйте эту страницу.</p>',
+            '<table><tr><th>Оригинал</th><th>Получено</th><th>Извлечение</th><th>Содержательная проверка</th><th>Происхождение</th></tr>']
+    for row in rows:
+        name=row['original_name'] or unquote(urlsplit(row['url']).path.rsplit('/',1)[-1]) or 'document'
+        states=store.rows('SELECT status FROM extractions WHERE snapshot_id=?',(row['id'],))
+        checked=store.rows('''SELECT DISTINCT f.id FROM fragments f JOIN assessments a ON a.fragment_id=f.id
+            WHERE EXISTS(SELECT 1 FROM json_each(f.anchors) anchor JOIN chunks c ON c.id=json_extract(anchor.value,'$.chunk_id')
+            JOIN extractions e ON e.id=c.extraction_id WHERE e.snapshot_id=?)''',(row['id'],))
+        local=store.object_path(row['sha']).as_uri()
+        origins=store.rows('''SELECT o.label,o.headings,o.path,r.url FROM occurrences o JOIN snapshots s ON s.id=o.snapshot_id
+            JOIN resources r ON r.id=s.resource_id WHERE o.target_id=?''',(row['resource_id'],))
+        provenance=''.join('<li>'+esc(o['headings']+' / '+o['label']+' / '+o['path'])+' <a href="'+esc(o['url'])+'">Источник</a></li>' for o in origins)
+        blocks.append('<tr><td><a download="'+esc(name)+'" href="'+esc(local)+'">'+esc(name)+'</a></td><td>'+esc(row['mime'])+'<br>'+str(row['size'])+' байт</td><td>'+esc(', '.join(s['status'] for s in states) or 'не извлечено')+'</td><td>'+str(len(checked))+' проверенных фрагментов; весь файл не подтверждён</td><td><a href="'+esc(row['url'])+'">Исходный URL</a><details><summary>SHA и вхождения</summary><code>'+row['sha']+'</code><ul>'+provenance+'</ul></details></td></tr>')
+    blocks.append('</table></html>')
+    target=Path(output).resolve(); target.write_text('\n'.join(blocks),encoding='utf8',newline='\n')
+    return {'output':str(target),'snapshots':len(rows),'bytes':sum(r['size'] for r in rows)}
 
 
 def write_report(store, output):

@@ -62,7 +62,7 @@ def compare(store, left_fragment, right_fragment, relation, dimensions, reason, 
             scopes.append({(v['program'],v['course']) for v in store.rows('SELECT * FROM versions')
                            if all(source_belongs_to_version(store,a['chunk_id'],v['id']) for a in anchors)})
         if not scopes[0]&scopes[1]:
-            raise ValueError('Replacement comparison requires the same course; cross-course authorization belongs in an evidence review')
+            raise ValueError('Replacement comparison requires reviewed bindings to the same course; reachability alone is insufficient')
     refs=[]
     for fid in (left_fragment,right_fragment):
         current=store.rows('SELECT id FROM assessments WHERE fragment_id=? ORDER BY version DESC LIMIT 1',(fid,))

@@ -18,7 +18,7 @@ def html_structure(store, sid, data, base):
     soup = BeautifulSoup(data.decode("utf-8", "replace"), "html.parser")
     root = soup.select_one(".mw-parser-output") or soup.find("main") or soup.body or soup
     headings = []
-    records, links = [], []
+    records, links, contexts = [], [], []
     ordinal = 0
 
     def walk(tag, path, parent=None):
@@ -46,6 +46,10 @@ def html_structure(store, sid, data, base):
                     context = tag.find_parent(["tr","li","p","dd"]) or tag.parent
                     links.append((uid(sid,path,"link"),sid,ident,rid,href,
                                   tag.get_text(" ",strip=True),context.get_text(" ",strip=True),hp,path))
+                    navigation=any(a.name in {'nav','header','footer'} or a.get('role')=='navigation'
+                        or set(a.get('class',[]))&{'mw-editsection','toc','navbox','navigation'}
+                        for a in [tag,*tag.parents] if isinstance(a,Tag))
+                    contexts.append((uid(sid,path,'link'),int(navigation)))
                 except ValueError:
                     pass
         counts = {}
@@ -57,6 +61,7 @@ def html_structure(store, sid, data, base):
     with store.db:
         store.db.executemany("INSERT OR IGNORE INTO nodes VALUES(?,?,?,?,?,?,?,?)", records)
         store.db.executemany("INSERT OR IGNORE INTO occurrences VALUES(?,?,?,?,?,?,?,?,?)", links)
+        store.db.executemany("INSERT OR IGNORE INTO link_context VALUES(?,?)",contexts)
     return [(f"dom:{r[5]}",r[6],"text_only") for r in records
             if r[4] in {"p","tr","li","h1","h2","h3","h4"} and r[6]]
 
@@ -79,6 +84,12 @@ def extract(store, sid):
             for n,p in enumerate(reader.pages,1):
                 text = p.extract_text() or ""
                 chunks.append((f"page:{n}",text,"needs_visual_review" if len(text.strip())>40 else "needs_ocr"))
+                for a,ref in enumerate(p.get('/Annots',[])):
+                    annotation=ref.get_object(); action=annotation.get('/A',{})
+                    if hasattr(action,'get_object'): action=action.get_object()
+                    href=action.get('/URI') if hasattr(action,'get') else None
+                    if href:
+                        document_link(store,sid,f'/page/{n}/link/{a}',str(href),str(href),text[:2000],row['final_url'])
             status = "text_extracted_needs_visual_review"
     elif "html" in mime or data.lstrip().lower().startswith((b"<!doctype html",b"<html")):
         chunks = html_structure(store,sid,data,row["final_url"])
@@ -104,18 +115,8 @@ def extract(store, sid):
         status = "timed_transcript_only"
     elif "json" in mime or row["final_url"].endswith(".ipynb"):
         obj = json.loads(data)
-        if isinstance(obj,dict) and 'tree' in obj and 'sha' in obj and urlsplit(row['final_url']).hostname=='api.github.com':
-            parts=urlsplit(row['final_url']).path.split('/')
-            repo='/'.join(parts[2:4])
-            for n,item in enumerate(obj['tree']):
-                if item.get('type')!='blob': continue
-                raw='https://raw.githubusercontent.com/'+repo+'/'+obj['sha']+'/'+quote(item['path'],safe='/')
-                target=store.resource(raw,'github_tree_entry')
-                path=f'/tree/{n}'
-                node=uid(sid,path)
-                with store.db:
-                    store.db.execute('INSERT OR IGNORE INTO nodes VALUES(?,?,?,?,?,?,?,?)',(node,sid,None,n,'json_entry',path,json.dumps(item,ensure_ascii=False),'[]'))
-                    store.db.execute('INSERT OR IGNORE INTO occurrences VALUES(?,?,?,?,?,?,?,?,?)',(uid(node,'link'),sid,node,target,raw,item['path'],'Git tree '+obj['sha']+' path '+item['path'],'[]',path))
+        from .providers import provider_links
+        provider_links(store,sid)
         if isinstance(obj,dict) and "cells" in obj:
             for n,cell in enumerate(obj["cells"],1):
                 chunks.append((f"cell:{n}","".join(cell.get("source",[])),"unexecuted_"+cell.get("cell_type","unknown")))
@@ -124,7 +125,12 @@ def extract(store, sid):
             chunks = [("json:metadata",json.dumps(obj,ensure_ascii=False),"metadata_only")]
             status = "metadata_only"
     elif mime.startswith("text/"):
-        chunks = [("text:1",data.decode("utf8","replace"),"text_only")]
+        text=data.decode("utf8","replace")
+        chunks = [("text:1",text,"text_only")]
+        for n,match in enumerate(re.finditer(r'\[([^\]]+)\]\(([^\s)]+)\)|\\(?:url|href)\{([^}]+)\}',text)):
+            href=match.group(2) or match.group(3)
+            document_link(store,sid,f'/text/link/{n}',href,match.group(1) or href,
+                          text[max(0,match.start()-150):match.end()+150],row['final_url'])
         status = "text_extracted"
     elif mime.startswith(("video/","audio/")):
         status = "media_untranscribed"
@@ -137,6 +143,17 @@ def extract(store, sid):
                 store.db.execute("INSERT INTO chunks_fts(id,text) VALUES(?,?)",(cid,text))
     (store.home/"derived"/(eid+".json")).write_text(json.dumps({"snapshot":sid,"engine":ENGINE,"status":status,"chunks":chunks},ensure_ascii=False,indent=2),encoding="utf8")
     return status
+
+
+def document_link(store,sid,path,href,label,context,base):
+    try: rid=store.resource(urljoin(base,href))
+    except ValueError: return
+    node=uid(sid,path)
+    with store.db:
+        store.db.execute('INSERT OR IGNORE INTO nodes VALUES(?,?,?,?,?,?,?,?)',
+                         (node,sid,None,0,'document_link',path,context,'[]'))
+        store.db.execute('INSERT OR IGNORE INTO occurrences VALUES(?,?,?,?,?,?,?,?,?)',
+                         (uid(node,'link'),sid,node,rid,href,label,context,'[]',path))
 
 
 def import_local(store, path, source_url=None):

@@ -6,7 +6,7 @@ from .store import Store
 from .network import Fetcher
 from .ingest import extract, import_local, render_page
 from .providers import capability, metadata_route
-from .research import candidates, report, export_graph, add_version, add_lesson, review
+from .research import candidates, report, export_graph, add_version, add_lesson, review, bind_material
 from .pedagogy import annotate, compare, trajectory
 
 
@@ -17,6 +17,13 @@ def main():
     sub.add_parser("init")
     seed=sub.add_parser("seed"); seed.add_argument("urls",nargs="+"); seed.add_argument("--refresh",action="store_true")
     run=sub.add_parser("run"); run.add_argument("--allow",nargs="+",required=True); run.add_argument("--budget",type=int,default=10)
+    crawl=sub.add_parser('crawl',help='Resume bounded traversal from an explicit educational root')
+    crawl.add_argument('url'); crawl.add_argument('--budget',type=int,default=10)
+    crawl.add_argument('--max-depth',type=int,default=4); crawl.add_argument('--max-frontier',type=int,default=5000)
+    crawl.add_argument('--max-requests',type=int,default=50); crawl.add_argument('--max-total-mib',type=int,default=128)
+    crawl.add_argument('--max-file-mib',type=int,default=32); crawl.add_argument('--seconds',type=int,default=300)
+    sub.add_parser('frontier').add_argument('--limit',type=int,default=100)
+    sub.add_parser('library').add_argument('output')
     links=sub.add_parser("links"); links.add_argument("--contains",default=""); links.add_argument("--limit",type=int,default=30)
     follow=sub.add_parser("follow"); follow.add_argument("resource_id"); follow.add_argument("--refresh",action="store_true")
     imp=sub.add_parser("import"); imp.add_argument("path"); imp.add_argument("--source-url")
@@ -29,7 +36,7 @@ def main():
     sub.add_parser("report-html").add_argument("output")
     plan=sub.add_parser("plan"); plan.add_argument("json_file",help="Curated version + lessons, with source nodes")
     rev=sub.add_parser("review"); rev.add_argument("json_file",help="Evidence decision; exact quote validation")
-    for name in ("annotate","compare","trajectory"):
+    for name in ("annotate","compare","trajectory","bind"):
         sub.add_parser(name).add_argument("json_file")
     sub.add_parser("fragments")
     sub.add_parser("trajectories")
@@ -38,11 +45,26 @@ def main():
     args=p.parse_args()
     s=Store(args.home)
     out=None
-    if args.command=="init": out={"home":str(s.home),"schema":1}
+    if args.command=="init": out={"home":str(s.home),"schema":2}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
     elif args.command=="run":
         if not 1<=args.budget<=100: p.error("budget must be 1..100")
         out=Fetcher(s,args.allow).run(args.budget)
+    elif args.command=='crawl':
+        from .crawl import Crawl
+        if not (1<=args.budget<=1000 and 1<=args.max_requests<=2000 and 1<=args.max_total_mib<=4096
+                and 1<=args.max_file_mib<=128 and 1<=args.seconds<=3600):
+            p.error('Invalid bounded crawl limits; file cap is 128 MiB pending streaming media support')
+        crawler=Crawl(s,args.url,args.max_depth,args.max_frontier)
+        fetcher=Fetcher(s,[],max_bytes=args.max_file_mib*1024*1024)
+        try: out=fetcher.run(args.budget,crawler,args.max_requests,args.max_total_mib*1024*1024,args.seconds)
+        finally: fetcher.client.close()
+    elif args.command=='frontier':
+        out=s.rows('''SELECT e.*,r.url FROM crawl_edges e JOIN resources r ON r.id=e.target_id
+            WHERE e.state!='admitted' ORDER BY e.state,e.reason LIMIT ?''',(args.limit,))
+    elif args.command=='library':
+        from .presentation import write_library
+        out=write_library(s,args.output)
     elif args.command=="links": out=s.rows("SELECT o.*,r.url,r.provider FROM occurrences o JOIN resources r ON r.id=o.target_id WHERE o.label LIKE ? OR o.context LIKE ? OR r.url LIKE ? LIMIT ?",("%"+args.contains+"%",)*3+(args.limit,))
     elif args.command=="follow":
         if not s.rows("SELECT id FROM occurrences WHERE target_id=?",(args.resource_id,)): p.error("follow requires an observed educational link; use seed for explicit sources")
@@ -67,8 +89,8 @@ def main():
         vid=add_version(s,**obj["version"])
         out={"version":vid,"lessons":[add_lesson(s,version_id=vid,**x) for x in obj["lessons"]]}
     elif args.command=="review": out=review(s,**json.loads(Path(args.json_file).read_text(encoding="utf8")))
-    elif args.command in {"annotate","compare","trajectory"}:
-        fn={"annotate":annotate,"compare":compare,"trajectory":trajectory}[args.command]
+    elif args.command in {"annotate","compare","trajectory","bind"}:
+        fn={"annotate":annotate,"compare":compare,"trajectory":trajectory,"bind":bind_material}[args.command]
         out=fn(s,**json.loads(Path(args.json_file).read_text(encoding="utf8")))
     elif args.command=="fragments": out=s.rows("SELECT f.*,a.analysis,a.version FROM fragments f JOIN assessments a ON a.fragment_id=f.id WHERE a.version=(SELECT max(version) FROM assessments WHERE fragment_id=f.id)")
     elif args.command=="trajectories": out=s.rows("SELECT * FROM trajectories")

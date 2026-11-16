@@ -73,7 +73,7 @@ def test_worker_scope_does_not_block_other_jobs(s):
 
 def test_network_http_failure_keeps_snapshot(s,monkeypatch):
     monkeypatch.setattr('atlas.network.validate_url',lambda *a: None)
-    rid=s.resource('https://example.org/a'); sid=s.snapshot(rid,b'success','text/plain'); s.enqueue(rid)
+    rid=s.resource('https://example.org/a'); sid=s.snapshot(rid,b'success','text/plain'); s.enqueue(rid,refresh=True)
     def route(request):
         if request.url.path=='/robots.txt': return httpx.Response(404)
         return httpx.Response(429,headers={'Retry-After':'700'})
@@ -154,14 +154,37 @@ def test_candidate_search_does_not_make_decisions(s):
     assert not s.rows('SELECT * FROM reviews')
 
 
-def test_cross_course_replacement_requires_source_instruction(s):
+@pytest.mark.parametrize('verdict,covered,uncovered', [
+    ('partial',['rank'],['examples']), ('confirmed_scope',['rank','examples'],[])])
+def test_cross_course_replacement_rejects_unrelated_authentic_quote(s,verdict,covered,uncovered):
     lid,c=plan(s)
     target=s.rows('SELECT * FROM versions')[0]
     other=add_version(s,'OTHER PROGRAM','2023','Other course','B',target['source_snapshot'],target['evidence_node'])
     evidence=[{'chunk_id':c['id'],'quote':'Matrix rank theorem.','check_method':'Independent source reading','source_version_id':other}]
     with pytest.raises(ValueError,match='Cross-course'):
         review(s,lid,'partial',['rank'],['examples'],'Similar topic is insufficient','test',evidence)
+    authorization={'node_id':target['evidence_node'],'quote':'Matrix rank theorem.',
+                   'reason':'This authentic quote does not authorize another course'}
+    with pytest.raises(ValueError,match='Cross-course'):
+        review(s,lid,verdict,covered,uncovered,'Title similarity','test',evidence,authorization)
     assert not s.rows('SELECT * FROM reviews')
+
+
+def test_retracted_decision_is_history_only(s,tmp_path):
+    from atlas.research import report
+    from atlas.presentation import write_report
+    lid,c=plan(s)
+    evidence=[{'chunk_id':c['id'],'quote':'Matrix rank theorem.','check_method':'Read source'}]
+    old=review(s,lid,'partial',['rank'],['examples'],'WithdrawnMarker','test',evidence)
+    latest=review(s,lid,'rejected',[],['rank','examples'],'CorrectionMarker','test',[])
+    assert [r['id'] for r in report(s)['latest_decisions']]==[latest]
+    assert s.rows('SELECT id FROM reviews WHERE id=?',(old,))
+    assert not s.rows("SELECT id FROM chunks_fts WHERE chunks_fts MATCH 'WithdrawnMarker'")
+    assert not candidates(s,'WithdrawnMarker')
+    output=tmp_path/'report.html'; write_report(s,output)
+    rendered=output.read_text(encoding='utf8')
+    assert 'CorrectionMarker' in rendered and 'WithdrawnMarker' not in rendered
+    assert s.rows('SELECT status FROM lessons')[0]['status']=='listed_without_link'
 
 
 def test_same_course_historical_evidence_is_allowed(s):
@@ -176,3 +199,27 @@ def test_same_course_historical_evidence_is_allowed(s):
 def test_canonical_preserves_meaning():
     assert canonical('https://EXAMPLE.org/a%2Fb?year=2024#lecture')=='https://example.org/a%2Fb?year=2024'
     assert canonical('https://example.org/курс').startswith('https://example.org/%D0')
+
+
+def test_discovery_path_does_not_assign_other_course_material(s):
+    from atlas.research import source_belongs_to_version, resource_reachable_from_version, bind_material
+    lid,_=plan(s); target=s.rows('SELECT * FROM versions')[0]
+    root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(target['source_snapshot'],))[0]['resource_id']
+    sid=s.snapshot(root,b'<main><p>Other course <a href="/other">notes</a></p></main>','text/html'); extract(s,sid)
+    other_rid=s.resource('https://example.org/other')
+    other_sid=s.snapshot(other_rid,b'<main><p>Course B <a href="/donor.txt">Lecture notes</a></p></main>','text/html'); extract(s,other_sid)
+    other_node=s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'",(other_sid,))[0]['id']
+    donor=s.resource('https://example.org/donor.txt'); donor_sid=s.snapshot(donor,b'Matrix rank theorem.','text/plain'); extract(s,donor_sid)
+    chunk=s.rows('SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id WHERE e.snapshot_id=?',(donor_sid,))[0]['id']
+    assert resource_reachable_from_version(s,donor,target['id'])
+    assert not source_belongs_to_version(s,chunk,target['id'])
+    evidence={'chunk_id':chunk,'quote':'Matrix rank theorem.','check_method':'Read actual source'}
+    # Even an unregistered donor course cannot inherit the target course by default.
+    for source in ({},{'source_version_id':target['id']}):
+        with pytest.raises(ValueError,match='reviewed source-version binding'):
+            review(s,lid,'partial',['rank'],['examples'],'Similar content','test',[{**evidence,**source}])
+    other=add_version(s,'OTHER','2024','Course B','B',other_sid,other_node)
+    bind_material(s,other,donor,'Reviewed explicit course B notes link','reviewer')
+    assert source_belongs_to_version(s,chunk,other)
+    with pytest.raises(ValueError,match='Cross-course'):
+        review(s,lid,'partial',['rank'],['examples'],'Similar content','test',[{**evidence,'source_version_id':other}])
