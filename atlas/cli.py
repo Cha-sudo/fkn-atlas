@@ -34,6 +34,7 @@ def main():
     listing=sub.add_parser('drive-listing',help='Import a normalized response from an existing Drive connector')
     listing.add_argument('url'); listing.add_argument('json_file')
     ext=sub.add_parser("extract"); ext.add_argument("snapshot_id")
+    ext.add_argument('--reprocess',action='store_true',help='Append extraction under the current engine; preserve previous versions')
     find=sub.add_parser("search"); find.add_argument("query"); find.add_argument("--limit",type=int,default=10)
     cand=sub.add_parser("candidates"); cand.add_argument("query"); cand.add_argument("--limit",type=int,default=10)
     cand.add_argument('--lesson',help='Restrict gap candidates to reviewed materials of the same course; otherwise supplementary discovery')
@@ -83,9 +84,9 @@ def main():
     elif args.command=='drive-listing':
         from .connectors import drive_listing
         out=drive_listing(s,args.url,json.loads(Path(args.json_file).read_text(encoding='utf8')))
-    elif args.command=="extract": out=extract(s,args.snapshot_id)
+    elif args.command=="extract": out=extract(s,args.snapshot_id,reprocess=args.reprocess)
     elif args.command=="search":
-        out=s.rows("SELECT c.*,bm25(chunks_fts) AS rank FROM chunks_fts JOIN chunks c ON c.id=chunks_fts.id WHERE chunks_fts MATCH ? ORDER BY rank LIMIT ?",(args.query,args.limit))
+        out=s.rows("SELECT c.*,bm25(chunks_fts) AS rank FROM chunks_fts JOIN chunks c ON c.id=chunks_fts.id JOIN extractions e ON e.id=c.extraction_id WHERE chunks_fts MATCH ? AND e.created=(SELECT max(e2.created) FROM extractions e2 WHERE e2.snapshot_id=e.snapshot_id) ORDER BY rank LIMIT ?",(args.query,args.limit))
     elif args.command=="candidates": out=candidates(s,args.query,args.limit,include_plans=args.include_plans,lesson_id=args.lesson)
     elif args.command=="nodes": out=s.rows("SELECT * FROM nodes WHERE snapshot_id=? AND text LIKE ? ORDER BY ordinal",(args.snapshot_id,"%"+args.contains+"%"))
     elif args.command=="report": out=report(s)

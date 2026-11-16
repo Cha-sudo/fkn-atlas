@@ -54,6 +54,7 @@ def candidates(store, query, limit=10, exclude_resource=None, include_plans=Fals
     docs = store.rows("""SELECT c.*,s.sha,s.resource_id,r.url FROM chunks c
         JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id
         JOIN resources r ON r.id=s.resource_id WHERE c.quality!='metadata_only'
+        AND e.created=(SELECT max(e2.created) FROM extractions e2 WHERE e2.snapshot_id=e.snapshot_id)
         AND (? OR r.provider!='mediawiki')""",(include_plans,))
     memberships = {}
     if target:
@@ -181,7 +182,8 @@ def report(store):
     counts["resources_attempted"] = store.db.execute("SELECT count(DISTINCT resource_id) FROM attempts").fetchone()[0]
     counts["resources_unattempted"] = counts["resources"]-counts["resources_attempted"]
     return {"counts":counts,"scope":"This local sample only; no claim of all-Wiki coverage",
-        "extraction_states":store.rows("SELECT status,count(*) AS n FROM extractions GROUP BY status"),
+        "extraction_states":store.rows("SELECT status,count(*) AS n FROM extractions e WHERE created=(SELECT max(e2.created) FROM extractions e2 WHERE e2.snapshot_id=e.snapshot_id) GROUP BY status"),
+        "extraction_history_states":store.rows("SELECT status,count(*) AS n FROM extractions GROUP BY status"),
         "lesson_states":store.rows("SELECT status,count(*) AS n FROM lessons GROUP BY status"),
         "latest_decisions":store.rows("SELECT r.* FROM reviews r WHERE version=(SELECT max(version) FROM reviews WHERE lesson_id=r.lesson_id)"),
         "queue":store.rows("SELECT state,count(*) AS n FROM jobs GROUP BY state"),

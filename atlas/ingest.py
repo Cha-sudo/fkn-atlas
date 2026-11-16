@@ -8,6 +8,9 @@ import zipfile
 import os
 import shutil
 import uuid
+import logging
+from contextlib import contextmanager
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, quote
 from bs4 import BeautifulSoup, Tag
@@ -15,7 +18,48 @@ from pypdf import PdfReader
 from .store import uid
 
 ENGINE = "atlas-extract-1"
+try:
+    FONT_VERSION = version('fonttools')
+except PackageNotFoundError:
+    FONT_VERSION = 'absent'
+PDF_ENGINE = 'atlas-pdf-2;pypdf='+version('pypdf')+';fonttools='+FONT_VERSION
 MAX_PARSE_BYTES = 32*1024*1024
+
+
+@contextmanager
+def pdf_diagnostics():
+    """Bounded diagnostic evidence, rather than losing warnings in terminal output.
+
+    Extraction is synchronous in this local worker. Restore logger state on failure.
+    """
+    result={'warning_count':0,'messages':{}}
+    class Capture(logging.Handler):
+        def emit(self, record):
+            result['warning_count']+=1
+            message=record.getMessage()[:600]
+            if message in result['messages'] or len(result['messages'])<16:
+                result['messages'][message]=result['messages'].get(message,0)+1
+    logger=logging.getLogger('pypdf'); handler=Capture(logging.WARNING)
+    previous=logger.propagate
+    logger.addHandler(handler); logger.propagate=False
+    try: yield result
+    finally:
+        logger.removeHandler(handler); logger.propagate=previous
+
+
+def pdf_chunks(store, sid, data, base):
+    chunks=[]
+    reader=PdfReader(io.BytesIO(data))
+    if reader.is_encrypted: return chunks,'encrypted'
+    for n,p in enumerate(reader.pages,1):
+        text=p.extract_text() or ''
+        chunks.append((f'page:{n}',text,'needs_visual_review' if len(text.strip())>40 else 'needs_ocr'))
+        for a,ref in enumerate(p.get('/Annots',[])):
+            annotation=ref.get_object(); action=annotation.get('/A',{})
+            if hasattr(action,'get_object'): action=action.get_object()
+            href=action.get('/URI') if hasattr(action,'get') else None
+            if href: document_link(store,sid,f'/page/{n}/link/{a}',str(href),str(href),text[:2000],base)
+    return chunks,'text_extracted_needs_visual_review'
 
 
 def html_structure(store, sid, data, base):
@@ -70,40 +114,37 @@ def html_structure(store, sid, data, base):
             if r[4] in {"p","tr","li","h1","h2","h3","h4"} and r[6]]
 
 
-def extract(store, sid):
+def extract(store, sid, reprocess=False):
     row = store.rows("SELECT * FROM snapshots WHERE id=?",(sid,))[0]
-    eid = uid(sid,ENGINE)
+    path=store.object_path(row['sha'])
+    with path.open('rb') as f: prefix=f.read(32)
+    engine=PDF_ENGINE if prefix.startswith(b'%PDF') else ENGINE
+    eid = uid(sid,engine)
     old = store.rows("SELECT status FROM extractions WHERE id=?",(eid,))
     if old:
         return old[0]["status"]
-    path=store.object_path(row['sha'])
-    with path.open('rb') as f: prefix=f.read(32)
+    previous=store.rows('SELECT status FROM extractions WHERE snapshot_id=? ORDER BY created DESC LIMIT 1',(sid,))
+    if previous and not reprocess:
+        return previous[0]['status']  # Parser upgrade never silently reprocesses the corpus.
     mime = row["mime"].split(";")[0].lower()
     media=(mime.startswith(('video/','audio/')) or prefix[4:8]==b'ftyp'
            or urlsplit(row['final_url']).path.lower().endswith(('.mp4','.webm','.mkv','.mp3','.wav','.flac','.ogg','.mov','.m4a')))
     oversized=path.stat().st_size>MAX_PARSE_BYTES
     data=b'' if media or oversized else path.read_bytes()
     chunks = []
+    diagnostics=None
     status = "unsupported"
     if media:
         status='media_untranscribed'
     elif oversized:
         status='archive_stored_unread' if prefix[:2]==b'PK' or 'zip' in mime else 'extraction_deferred_size'
     elif data.startswith(b"%PDF"):
-        reader = PdfReader(io.BytesIO(data))
-        if reader.is_encrypted:
-            status = "encrypted"
-        else:
-            for n,p in enumerate(reader.pages,1):
-                text = p.extract_text() or ""
-                chunks.append((f"page:{n}",text,"needs_visual_review" if len(text.strip())>40 else "needs_ocr"))
-                for a,ref in enumerate(p.get('/Annots',[])):
-                    annotation=ref.get_object(); action=annotation.get('/A',{})
-                    if hasattr(action,'get_object'): action=action.get_object()
-                    href=action.get('/URI') if hasattr(action,'get') else None
-                    if href:
-                        document_link(store,sid,f'/page/{n}/link/{a}',str(href),str(href),text[:2000],row['final_url'])
-            status = "text_extracted_needs_visual_review"
+        with pdf_diagnostics() as diagnostics:
+            try: chunks,status=pdf_chunks(store,sid,data,row['final_url'])
+            except Exception:
+                store.attempt(row['resource_id'],'extraction_diagnostics',sid=sid,
+                    error=json.dumps({'engine':engine,**diagnostics},ensure_ascii=False))
+                raise
     elif "html" in mime or data.lstrip().lower().startswith((b"<!doctype html",b"<html")):
         chunks = html_structure(store,sid,data,row["final_url"])
         status = "text_extracted"
@@ -148,13 +189,13 @@ def extract(store, sid):
     elif mime.startswith(("video/","audio/")):
         status = "media_untranscribed"
     with store.db:
-        store.db.execute("INSERT INTO extractions VALUES(?,?,?,?,?)",(eid,sid,ENGINE,status,time.time()))
+        store.db.execute("INSERT INTO extractions VALUES(?,?,?,?,?)",(eid,sid,engine,status,time.time()))
         for n,(loc,text,quality) in enumerate(chunks):
             cid = uid(eid,n,loc)
             store.db.execute("INSERT INTO chunks VALUES(?,?,?,?,?)",(cid,eid,loc,text,quality))
             if text and quality != "metadata_only":
                 store.db.execute("INSERT INTO chunks_fts(id,text) VALUES(?,?)",(cid,text))
-    (store.home/"derived"/(eid+".json")).write_text(json.dumps({"snapshot":sid,"engine":ENGINE,"status":status,"chunks":chunks},ensure_ascii=False,indent=2),encoding="utf8")
+    (store.home/"derived"/(eid+".json")).write_text(json.dumps({"snapshot":sid,"engine":engine,"status":status,"chunks":chunks,'diagnostics':diagnostics},ensure_ascii=False,indent=2),encoding="utf8",newline='\n')
     return status
 
 
