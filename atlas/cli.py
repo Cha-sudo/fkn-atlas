@@ -31,9 +31,12 @@ def main():
     links=sub.add_parser("links"); links.add_argument("--contains",default=""); links.add_argument("--limit",type=int,default=30)
     follow=sub.add_parser("follow"); follow.add_argument("resource_id"); follow.add_argument("--refresh",action="store_true")
     imp=sub.add_parser("import"); imp.add_argument("path"); imp.add_argument("--source-url")
+    listing=sub.add_parser('drive-listing',help='Import a normalized response from an existing Drive connector')
+    listing.add_argument('url'); listing.add_argument('json_file')
     ext=sub.add_parser("extract"); ext.add_argument("snapshot_id")
     find=sub.add_parser("search"); find.add_argument("query"); find.add_argument("--limit",type=int,default=10)
     cand=sub.add_parser("candidates"); cand.add_argument("query"); cand.add_argument("--limit",type=int,default=10)
+    cand.add_argument('--lesson',help='Restrict gap candidates to reviewed materials of the same course; otherwise supplementary discovery')
     cand.add_argument("--include-plans",action="store_true")
     nodes=sub.add_parser("nodes"); nodes.add_argument("snapshot_id"); nodes.add_argument("--contains",default="")
     sub.add_parser("report"); sub.add_parser("verify"); sub.add_parser("graph")
@@ -49,7 +52,7 @@ def main():
     args=p.parse_args()
     s=Store(args.home)
     out=None
-    if args.command=="init": out={"home":str(s.home),"schema":3}
+    if args.command=="init": out={"home":str(s.home),"schema":4}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
     elif args.command in {'crawl','run'}:
         from .crawl import Crawl
@@ -77,10 +80,13 @@ def main():
         if not s.rows("SELECT id FROM occurrences WHERE target_id=?",(args.resource_id,)): p.error("follow requires an observed educational link; use seed for explicit sources")
         out=s.enqueue(args.resource_id,args.refresh)
     elif args.command=="import": out=import_local(s,args.path,args.source_url)
+    elif args.command=='drive-listing':
+        from .connectors import drive_listing
+        out=drive_listing(s,args.url,json.loads(Path(args.json_file).read_text(encoding='utf8')))
     elif args.command=="extract": out=extract(s,args.snapshot_id)
     elif args.command=="search":
         out=s.rows("SELECT c.*,bm25(chunks_fts) AS rank FROM chunks_fts JOIN chunks c ON c.id=chunks_fts.id WHERE chunks_fts MATCH ? ORDER BY rank LIMIT ?",(args.query,args.limit))
-    elif args.command=="candidates": out=candidates(s,args.query,args.limit,include_plans=args.include_plans)
+    elif args.command=="candidates": out=candidates(s,args.query,args.limit,include_plans=args.include_plans,lesson_id=args.lesson)
     elif args.command=="nodes": out=s.rows("SELECT * FROM nodes WHERE snapshot_id=? AND text LIKE ? ORDER BY ordinal",(args.snapshot_id,"%"+args.contains+"%"))
     elif args.command=="report": out=report(s)
     elif args.command=="report-html":

@@ -26,6 +26,8 @@ def provider_links(store, sid):
     """
     from .store import uid
     snap=store.rows('SELECT * FROM snapshots WHERE id=?',(sid,))[0]
+    if store.rows("SELECT snapshot_id FROM provider_states WHERE snapshot_id=? AND state='connector_directory_partial'",(sid,)):
+        return  # Retain the separately imported, explicitly incomplete connector evidence.
     url=snap['final_url']; p=urlsplit(url)
     kind=provider(url)
     if p.hostname not in {'api.github.com','cloud-api.yandex.net','www.youtube.com','drive.google.com','docs.google.com','github.com'}:

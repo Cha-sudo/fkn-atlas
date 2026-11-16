@@ -47,6 +47,7 @@ def test_comparison_cannot_infer_course_from_link_reachability(tmp_path):
     fragment=annotate(s,**args)['fragment_id']
     with pytest.raises(ValueError,match='reviewed bindings'):
         compare(s,fragment,fragment,'partial_replacement',['content'],'Self comparison cannot infer course','Fixture')
-    bind_material(s,vid,s.resource('https://example.org/material'),'Manually checked course membership','reviewer')
+    material=s.rows('SELECT e.snapshot_id FROM chunks c JOIN extractions e ON e.id=c.extraction_id WHERE c.id=?',(args['anchors'][0]['chunk_id'],))[0]['snapshot_id']
+    bind_material(s,vid,material,'Manually checked course membership','reviewer')
     compare(s,fragment,fragment,'partial_replacement',['content'],'Identity fixture after binding','No content fit inferred automatically')
     s.db.close()

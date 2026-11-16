@@ -35,12 +35,39 @@ def add_lesson(store, version_id, label, position, topics, status, evidence_node
     return ident
 
 
-def candidates(store, query, limit=10, exclude_resource=None, include_plans=False):
-    """Content-based lexical TF-IDF + character n-grams. Ranking is NOT verification."""
+def candidates(store, query, limit=10, exclude_resource=None, include_plans=False, lesson_id=None):
+    """Retrieve content, optionally within a target lesson's reviewed course.
+
+    Broad search is supplementary discovery. A lesson-scoped result is still only
+    a candidate: membership does not establish topic, depth or outcome equivalence.
+    Filter before ranking/limiting so unrelated high scores cannot hide valid donors.
+    """
+    target = None
+    if lesson_id is not None:
+        target = store.rows('''SELECT v.* FROM lessons l JOIN versions v ON v.id=l.version_id
+            WHERE l.id=?''', (lesson_id,))
+        if not target:
+            raise ValueError('Unknown target lesson; course scope cannot be inferred from a query')
+        target = target[0]
+    if not 1 <= limit <= 1000:
+        raise ValueError('Candidate limit must be 1..1000')
     docs = store.rows("""SELECT c.*,s.sha,s.resource_id,r.url FROM chunks c
         JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id
         JOIN resources r ON r.id=s.resource_id WHERE c.quality!='metadata_only'
         AND (? OR r.provider!='mediawiki')""",(include_plans,))
+    memberships = {}
+    if target:
+        rows = store.rows('''SELECT c.id AS chunk_id,v.id AS version_id
+            FROM chunks c JOIN extractions e ON e.id=c.extraction_id
+            JOIN snapshots s ON s.id=e.snapshot_id
+            JOIN versions v ON v.program=? AND v.course=?
+            WHERE s.id=v.source_snapshot OR EXISTS (
+                SELECT 1 FROM version_snapshots m
+                WHERE m.version_id=v.id AND m.snapshot_id=s.id)''',
+            (target['program'],target['course']))
+        for row in rows:
+            memberships.setdefault(row['chunk_id'],set()).add(row['version_id'])
+        docs = [d for d in docs if d['id'] in memberships]
     def tokens(text):
         words = re.findall(r"[a-zа-яё0-9]{3,}",text.lower())
         return Counter(["w:"+w for w in words]+["g:"+w[i:i+4] for w in words for i in range(len(w)-3)])
@@ -59,7 +86,11 @@ def candidates(store, query, limit=10, exclude_resource=None, include_plans=Fals
         norm=math.sqrt(sum(x*x for x in v.values())) or 1
         score=sum(x*v.get(k,0) for k,x in qv.items())/(qnorm*norm)
         if score>0:
-            found.append({**doc,"score":round(score,5),"status":"candidate_only"})
+            found.append({**doc,"score":round(score,5),"status":"candidate_only",
+                "purpose":"same_course_gap_candidate" if target else "supplementary_discovery",
+                "target_lesson_id":lesson_id,
+                "source_version_ids":sorted(memberships.get(doc['id'],())),
+                "content_correspondence":"unverified"})
     return sorted(found,key=lambda r:(-r["score"],r["id"]))[:limit]
 
 
@@ -69,19 +100,22 @@ def source_belongs_to_version(store, chunk_id, version_id):
     return bool(store.rows('''SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id
         JOIN snapshots s ON s.id=e.snapshot_id JOIN versions v ON v.id=?
         WHERE c.id=? AND (s.id=v.source_snapshot OR EXISTS (
-        SELECT 1 FROM version_materials m WHERE m.version_id=v.id AND m.resource_id=s.resource_id))''',
+        SELECT 1 FROM version_snapshots m WHERE m.version_id=v.id AND m.snapshot_id=s.id))''',
         (version_id,chunk_id)))
 
 
-def bind_material(store, version_id, resource_id, reason, reviewer):
+def bind_material(store, version_id, snapshot_id, reason, reviewer):
     if not reason.strip() or not reviewer.strip():
         raise ValueError('A reviewed curriculum binding needs reason and reviewer')
-    if not resource_reachable_from_version(store, resource_id, version_id):
+    snapshot=store.rows('SELECT resource_id,sha FROM snapshots WHERE id=?',(snapshot_id,))
+    if not snapshot:
+        raise ValueError('Binding requires an explicit obtained snapshot, never a mutable URL')
+    if not resource_reachable_from_version(store, snapshot[0]['resource_id'], version_id):
         raise ValueError('Binding requires an observed provenance path; this is not proof of content fit')
     with store.db:
-        store.db.execute('INSERT INTO version_materials VALUES(?,?,?,?)',
-                         (version_id,resource_id,reason,reviewer))
-    return {'version_id':version_id,'resource_id':resource_id,'content_fit':'unverified'}
+        store.db.execute('INSERT INTO version_snapshots VALUES(?,?,?,?,?)',
+                         (version_id,snapshot_id,reason,reviewer,time.time()))
+    return {'version_id':version_id,'snapshot_id':snapshot_id,'sha':snapshot[0]['sha'],'content_fit':'unverified'}
 
 
 def resource_reachable_from_version(store, resource_id, version_id):

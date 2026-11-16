@@ -151,7 +151,72 @@ def test_candidate_search_does_not_make_decisions(s):
     plan(s)
     found=candidates(s,'matrix rank')
     assert found and all(r['status']=='candidate_only' for r in found)
+    assert all(r['purpose']=='supplementary_discovery' for r in found)
     assert not s.rows('SELECT * FROM reviews')
+
+
+def test_gap_candidates_filter_course_before_ranking(s):
+    from atlas.research import bind_material
+    lid,_=plan(s)
+    target=s.rows('SELECT * FROM versions')[0]
+    root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(target['source_snapshot'],))[0]['resource_id']
+    page=s.snapshot(root,b'<main><p>Materials <a href="/older.txt">Older notes</a><a href="/unbound.txt">Unknown</a></p></main>','text/html')
+    extract(s,page)
+    older=add_version(s,target['program'],'2023',target['course'],'Other stream',target['source_snapshot'],target['evidence_node'])
+    donor=s.resource('https://example.org/older.txt')
+    donor_sid=s.snapshot(donor,b'Matrix rank definition and examples. A longer unrelated introduction.','text/plain')
+    extract(s,donor_sid)
+    bind_material(s,older,donor_sid,'Reviewed older version of this course','test')
+    unbound=s.resource('https://example.org/unbound.txt')
+    extract(s,s.snapshot(unbound,b'Matrix rank.','text/plain'))
+    for program,course,suffix in [('OTHER',target['course'],'program'),(target['program'],'Calculus','course')]:
+        rid=s.resource('https://example.org/'+suffix)
+        sid=s.snapshot(rid,b'<main><p>Matrix rank.</p></main>','text/html'); extract(s,sid)
+        node=s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'",(sid,))[0]['id']
+        add_version(s,program,'2023',course,'A',sid,node)
+    # Three exact lexical matches are ineligible, even when limit=1.
+    found=candidates(s,'matrix rank',limit=1,exclude_resource=root,lesson_id=lid)
+    assert len(found)==1 and found[0]['resource_id']==donor
+    assert found[0]['source_version_ids']==[older]
+    assert found[0]['purpose']=='same_course_gap_candidate'
+    assert found[0]['content_correspondence']=='unverified'
+    assert not s.rows('SELECT * FROM reviews')
+    assert len(candidates(s,'matrix rank',exclude_resource=root))>1
+
+
+def test_gap_candidates_fail_closed_for_unknown_lesson(s):
+    plan(s)
+    with pytest.raises(ValueError,match='Unknown target lesson'):
+        candidates(s,'matrix rank',lesson_id='unknown')
+
+
+def test_binding_is_pinned_to_bytes_and_legacy_url_binding_is_not_migrated(s):
+    from atlas.research import bind_material,source_belongs_to_version
+    lid,_=plan(s); v=s.rows('SELECT * FROM versions')[0]
+    root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(v['source_snapshot'],))[0]['resource_id']
+    extract(s,s.snapshot(root,b'<main><a href="/mutable.txt">Course lecture</a></main>','text/html'))
+    rid=s.resource('https://example.org/mutable.txt')
+    a=s.snapshot(rid,b'Matrix rank, original teaching scope.','text/plain'); extract(s,a)
+    # Old schema declarations survive, but must never approve unknown bytes.
+    with s.db: s.db.execute('INSERT INTO version_materials VALUES(?,?,?,?)',(v['id'],rid,'Legacy URL binding','test'))
+    restarted=Store(s.home)
+    def chunk(sid):
+        return restarted.rows('SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id WHERE e.snapshot_id=?',(sid,))[0]['id']
+    assert not source_belongs_to_version(restarted,chunk(a),v['id'])
+    bind_material(restarted,v['id'],a,'Read original bytes and course reference','test')
+    b=restarted.snapshot(rid,b'Matrix rank, different teaching scope.','text/plain'); extract(restarted,b)
+    assert source_belongs_to_version(restarted,chunk(a),v['id'])
+    assert not source_belongs_to_version(restarted,chunk(b),v['id'])
+    found=candidates(restarted,'matrix rank',lesson_id=lid,exclude_resource=root)
+    assert {r['id'] for r in found}=={chunk(a)}
+    with pytest.raises(ValueError,match='reviewed source-version binding'):
+        review(restarted,lid,'partial',['rank'],['examples'],'New bytes are unreviewed','test',[
+            {'chunk_id':chunk(b),'quote':'Matrix rank','check_method':'Read','source_version_id':v['id']}])
+    bind_material(restarted,v['id'],b,'Separately reviewed new bytes','test')
+    assert source_belongs_to_version(restarted,chunk(b),v['id'])
+    assert restarted.rows('SELECT * FROM version_materials')
+    assert len(restarted.rows('SELECT * FROM version_snapshots'))==2
+    restarted.db.close()
 
 
 @pytest.mark.parametrize('verdict,covered,uncovered', [
@@ -219,7 +284,7 @@ def test_discovery_path_does_not_assign_other_course_material(s):
         with pytest.raises(ValueError,match='reviewed source-version binding'):
             review(s,lid,'partial',['rank'],['examples'],'Similar content','test',[{**evidence,**source}])
     other=add_version(s,'OTHER','2024','Course B','B',other_sid,other_node)
-    bind_material(s,other,donor,'Reviewed explicit course B notes link','reviewer')
+    bind_material(s,other,donor_sid,'Reviewed explicit course B notes link','reviewer')
     assert source_belongs_to_version(s,chunk,other)
     with pytest.raises(ValueError,match='Cross-course'):
         review(s,lid,'partial',['rank'],['examples'],'Similar content','test',[{**evidence,'source_version_id':other}])
