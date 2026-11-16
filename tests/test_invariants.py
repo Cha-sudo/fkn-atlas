@@ -127,8 +127,8 @@ def test_notebook_and_vtt_are_unexecuted(s,tmp_path):
     assert s.rows("SELECT locator FROM chunks WHERE quality='transcript_not_board_review'")[0]['locator'].startswith('time:')
 
 
-def plan(s):
-    _,sid=html(s,'<main><h2>Course 2024</h2><p>Matrix rank theorem.</p></main>')
+def plan(s, extra=''):
+    _,sid=html(s,'<main><h2>Course 2024</h2><p>Matrix rank theorem.</p>'+extra+'</main>')
     node=s.rows("SELECT id FROM nodes WHERE tag='p'")[0]['id']
     vid=add_version(s,'PROGRAM','2024','Linear algebra','A',sid,node)
     lid=add_lesson(s,vid,'Missing notes',1,['rank','examples'],'listed_without_link',node)
@@ -164,7 +164,8 @@ def test_gap_candidates_filter_course_before_ranking(s):
     root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(target['source_snapshot'],))[0]['resource_id']
     page=s.snapshot(root,b'<main><p>Materials <a href="/older.txt">Older notes</a><a href="/unbound.txt">Unknown</a></p></main>','text/html')
     extract(s,page)
-    older=add_version(s,target['program'],'2023',target['course'],'Other stream',target['source_snapshot'],target['evidence_node'])
+    older_node=s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'", (page,))[0]['id']
+    older=add_version(s,target['program'],'2023',target['course'],'Other stream',page,older_node)
     donor=s.resource('https://example.org/older.txt')
     donor_sid=s.snapshot(donor,b'Matrix rank definition and examples. A longer unrelated introduction.','text/plain')
     extract(s,donor_sid)
@@ -194,9 +195,10 @@ def test_gap_candidates_fail_closed_for_unknown_lesson(s):
 
 def test_binding_is_pinned_to_bytes_and_legacy_url_binding_is_not_migrated(s):
     from atlas.research import bind_material,source_belongs_to_version
-    lid,_=plan(s); v=s.rows('SELECT * FROM versions')[0]
+    lid,_=plan(s,'<a href="/mutable.txt">Course lecture</a>'); v=s.rows('SELECT * FROM versions')[0]
     root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(v['source_snapshot'],))[0]['resource_id']
-    extract(s,s.snapshot(root,b'<main><a href="/mutable.txt">Course lecture</a></main>','text/html'))
+    new_page=s.snapshot(root,b'<main><a href="/mutable.txt">Course lecture</a><a href="/later.txt">Only in new revision</a></main>','text/html')
+    extract(s,new_page)
     rid=s.resource('https://example.org/mutable.txt')
     a=s.snapshot(rid,b'Matrix rank, original teaching scope.','text/plain'); extract(s,a)
     # Old schema declarations survive, but must never approve unknown bytes.
@@ -205,6 +207,11 @@ def test_binding_is_pinned_to_bytes_and_legacy_url_binding_is_not_migrated(s):
     def chunk(sid):
         return restarted.rows('SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id WHERE e.snapshot_id=?',(sid,))[0]['id']
     assert not source_belongs_to_version(restarted,chunk(a),v['id'])
+    later=restarted.snapshot(restarted.resource('https://example.org/later.txt'),b'Later material','text/plain')
+    with pytest.raises(ValueError,match='observed provenance path'):
+        bind_material(restarted,v['id'],later,'Link occurs only in newer page','test')
+    with pytest.raises(ValueError,match='own version'):
+        bind_material(restarted,v['id'],new_page,'Different bytes of course page','test')
     bind_material(restarted,v['id'],a,'Read original bytes and course reference','test')
     b=restarted.snapshot(rid,b'Matrix rank, different teaching scope.','text/plain'); extract(restarted,b)
     assert source_belongs_to_version(restarted,chunk(a),v['id'])
@@ -292,9 +299,8 @@ def test_canonical_preserves_meaning():
 
 def test_discovery_path_does_not_assign_other_course_material(s):
     from atlas.research import source_belongs_to_version, resource_reachable_from_version, bind_material
-    lid,_=plan(s); target=s.rows('SELECT * FROM versions')[0]
-    root=s.rows('SELECT resource_id FROM snapshots WHERE id=?',(target['source_snapshot'],))[0]['resource_id']
-    sid=s.snapshot(root,b'<main><p>Other course <a href="/other">notes</a></p></main>','text/html'); extract(s,sid)
+    lid,_=plan(s,'<p>Other course <a href="/other">notes</a></p>')
+    target=s.rows('SELECT * FROM versions')[0]
     other_rid=s.resource('https://example.org/other')
     other_sid=s.snapshot(other_rid,b'<main><p>Course B <a href="/donor.txt">Lecture notes</a></p></main>','text/html'); extract(s,other_sid)
     other_node=s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'",(other_sid,))[0]['id']

@@ -111,6 +111,12 @@ def bind_material(store, version_id, snapshot_id, reason, reviewer):
     snapshot=store.rows('SELECT resource_id,sha FROM snapshots WHERE id=?',(snapshot_id,))
     if not snapshot:
         raise ValueError('Binding requires an explicit obtained snapshot, never a mutable URL')
+    root = store.rows('''SELECT s.id,s.resource_id FROM versions v
+        JOIN snapshots s ON s.id=v.source_snapshot WHERE v.id=?''',(version_id,))
+    if not root:
+        raise ValueError('Unknown course version')
+    if snapshot[0]['resource_id']==root[0]['resource_id'] and snapshot_id!=root[0]['id']:
+        raise ValueError('A different snapshot of the course page requires its own version record')
     if not resource_reachable_from_version(store, snapshot[0]['resource_id'], version_id):
         raise ValueError('Binding requires an observed provenance path; this is not proof of content fit')
     with store.db:
@@ -120,12 +126,18 @@ def bind_material(store, version_id, snapshot_id, reason, reviewer):
 
 
 def resource_reachable_from_version(store, resource_id, version_id):
-    reachable=store.rows('''WITH RECURSIVE edges(source,target) AS (
+    reachable=store.rows('''WITH RECURSIVE root(resource_id,snapshot_id) AS (
+        SELECT s.resource_id,s.id FROM versions v JOIN snapshots s ON s.id=v.source_snapshot WHERE v.id=?
+    ), edges(source,target) AS (
         SELECT s.resource_id,o.target_id FROM occurrences o JOIN snapshots s ON s.id=o.snapshot_id
-        UNION SELECT source_id,target_id FROM source_edges), reached(id) AS (
-        SELECT s.resource_id FROM versions v JOIN snapshots s ON s.id=v.source_snapshot WHERE v.id=?
-        UNION SELECT edges.target FROM edges JOIN reached ON edges.source=reached.id)
-        SELECT id FROM reached WHERE id=?''',(version_id,resource_id))
+        WHERE NOT EXISTS (SELECT 1 FROM root WHERE resource_id=s.resource_id AND snapshot_id!=s.id)
+        UNION SELECT e.source_id,e.target_id FROM source_edges e
+        WHERE NOT EXISTS (SELECT 1 FROM root WHERE resource_id=e.source_id AND snapshot_id!=e.evidence_snapshot)
+    ), reached(id) AS (
+        SELECT resource_id FROM root
+        UNION SELECT edges.target FROM edges JOIN reached ON edges.source=reached.id
+    )
+    SELECT id FROM reached WHERE id=?''',(version_id,resource_id))
     return bool(reachable)
 
 
