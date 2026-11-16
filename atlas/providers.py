@@ -130,7 +130,7 @@ def provider(url):
     host = (urlsplit(url).hostname or "").lower()
     if host in {"fruitdet.ru", "wiki.cs.hse.ru", "wikics.site"}:
         return "mediawiki"
-    if host in {"disk.yandex.ru", "yadi.sk", "disk.yandex.com"}:
+    if host in {"disk.yandex.ru", "disk.360.yandex.ru", "yadi.sk", "disk.yandex.com"}:
         return "yandex_disk"
     if host in {"youtu.be", "www.youtube.com", "youtube.com"}:
         return "youtube"

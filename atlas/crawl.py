@@ -20,7 +20,7 @@ def classify(link, source_url):
         return 'excluded', 'unsafe_scheme_or_port'
     if link.get('navigation'):
         return 'excluded', 'navigation'
-    if re.search(r'ведомост|оценки студентов|student grades',link['headings'],re.I):
+    if re.search(r'ведомост|оценки студентов|student grades',link['headings']+' '+link['label'],re.I):
         return 'excluded', 'administrative_records'
     if p.hostname in {'t.me','telegram.me'} or (re.search(r'преподавател|ассистент',link['headings'],re.I) and not EDUCATION.search(link['label'])):
         return 'pending', 'contact_not_teaching_content'

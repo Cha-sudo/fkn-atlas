@@ -101,6 +101,14 @@ def test_github_pins_commit_not_tree_and_fetches_file(s):
 
 
 def test_provider_boundaries_and_yandex_pagination(s):
+    from atlas.providers import provider,crawl_route
+    from urllib.parse import parse_qs,urlsplit
+    for path in ['/i/fixture-file','/d/fixture-folder']:
+        url='https://disk.360.yandex.ru'+path
+        assert provider(url)=='yandex_disk'
+        route=urlsplit(crawl_route(url))
+        assert route.hostname=='cloud-api.yandex.net'
+        assert parse_qs(route.query)['public_key']==[url]
     base='https://cloud-api.yandex.net/v1/disk/public/resources?public_key=example&limit=100&offset=0'
     rid=s.resource(base)
     obj={'type':'dir','path':'/','_embedded':{'offset':0,'total':3,'items':[{'path':'/notes','name':'Notes','type':'dir'}]}}
@@ -144,5 +152,6 @@ def test_contacts_records_unknown_links_and_drive_are_not_downloaded(s):
     base={'url':'https://teacher.example/profile','label':'Name','context':'','headings':'["Преподаватели и учебные ассистенты"]','path':'/content/a[1]'}
     assert classify(base,'https://example.org/course')[0]=='pending'
     assert classify({**base,'headings':'["Ведомости текущего контроля"]'},'https://example.org/course')[0]=='excluded'
+    assert classify({**base,'headings':'["Формула оценивания"]','label':'Ведомость'},'https://example.org/course')==('excluded','administrative_records')
     assert classify({**base,'url':'https://drive.google.com/drive/folders/fixture','label':'Lecture notes','headings':'[]'},'https://example.org/course')==('pending','drive_listing_adapter_unavailable')
     assert classify({**base,'headings':'[]','label':'Other'},'https://example.org/course')==('pending','educational_relation_uncertain')
