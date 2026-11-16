@@ -5,6 +5,9 @@ import json
 import re
 import time
 import zipfile
+import os
+import shutil
+import uuid
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, quote
 from bs4 import BeautifulSoup, Tag
@@ -12,6 +15,7 @@ from pypdf import PdfReader
 from .store import uid
 
 ENGINE = "atlas-extract-1"
+MAX_PARSE_BYTES = 32*1024*1024
 
 
 def html_structure(store, sid, data, base):
@@ -72,11 +76,20 @@ def extract(store, sid):
     old = store.rows("SELECT status FROM extractions WHERE id=?",(eid,))
     if old:
         return old[0]["status"]
-    data = store.object_path(row["sha"]).read_bytes()
+    path=store.object_path(row['sha'])
+    with path.open('rb') as f: prefix=f.read(32)
     mime = row["mime"].split(";")[0].lower()
+    media=(mime.startswith(('video/','audio/')) or prefix[4:8]==b'ftyp'
+           or urlsplit(row['final_url']).path.lower().endswith(('.mp4','.webm','.mkv','.mp3','.wav','.flac','.ogg','.mov','.m4a')))
+    oversized=path.stat().st_size>MAX_PARSE_BYTES
+    data=b'' if media or oversized else path.read_bytes()
     chunks = []
     status = "unsupported"
-    if data.startswith(b"%PDF"):
+    if media:
+        status='media_untranscribed'
+    elif oversized:
+        status='archive_stored_unread' if prefix[:2]==b'PK' or 'zip' in mime else 'extraction_deferred_size'
+    elif data.startswith(b"%PDF"):
         reader = PdfReader(io.BytesIO(data))
         if reader.is_encrypted:
             status = "encrypted"
@@ -158,14 +171,29 @@ def document_link(store,sid,path,href,label,context,base):
 
 def import_local(store, path, source_url=None):
     import mimetypes
+    from .store import file_digest
     path = Path(path).resolve()
-    if path.stat().st_size>512*1024*1024:
-        raise ValueError("Local import limit is 512 MiB; split large media outside Atlas")
-    data = path.read_bytes()
-    from .store import digest
-    url = source_url or "local://import/"+digest(data)+"/"+path.name
+    before=path.stat()
+    if before.st_size>32*1024**3: raise ValueError('Local import limit: 32 GiB')
+    sha=file_digest(path)
+    url = source_url or "local://import/"+sha+"/"+path.name
     rid = store.resource(url,"local_import")
-    sid = store.snapshot(rid,data,mimetypes.guess_type(path.name)[0] or "application/octet-stream",url)
+    staging=store.home/'partials'/(rid+'.'+uuid.uuid4().hex+'.part')
+    if not store.object_path(sha).exists():
+        if store.payload_bytes()+before.st_size>20*1024**3:
+            raise ValueError('Default local import storage quota: 20 GiB')
+        with path.open('rb') as source, staging.open('xb') as dest:
+            for block in iter(lambda:source.read(1024*1024),b''):
+                if shutil.disk_usage(store.home).free<1024**3+len(block):
+                    raise ValueError('Free disk reserve reached during import; private staging retained')
+                dest.write(block)
+            dest.flush(); os.fsync(dest.fileno())
+    after=path.stat()
+    if (before.st_size,before.st_mtime_ns)!=(after.st_size,after.st_mtime_ns):
+        raise ValueError('Local file changed during import; staging retained, no snapshot published')
+    sid=store.install_file(rid,staging,sha,before.st_size,mimetypes.guess_type(path.name)[0] or 'application/octet-stream',url)
+    with store.db:
+        store.db.execute('INSERT OR IGNORE INTO retrieval_metadata VALUES(?,?)',(sid,path.name))
     store.attempt(rid,"local_import",sid=sid)
     return sid,extract(store,sid)
 

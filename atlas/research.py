@@ -153,6 +153,7 @@ def report(store):
         "queue":store.rows("SELECT state,count(*) AS n FROM jobs GROUP BY state"),
         "crawl_edges":store.rows("SELECT state,reason,count(*) AS n FROM crawl_edges GROUP BY state,reason"),
         "provider_states":store.rows("SELECT state,count(*) AS n FROM provider_states GROUP BY state"),
+        "transfers":store.rows("SELECT state,count(*) AS n,sum(received) AS incomplete_bytes FROM transfers GROUP BY state"),
         "providers":store.rows("SELECT provider,count(*) AS n FROM resources GROUP BY provider")}
 
 

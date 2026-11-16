@@ -14,6 +14,15 @@ def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def file_digest(path, check=None):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as f:
+        for block in iter(lambda:f.read(1024*1024),b''):
+            if check: check()
+            h.update(block)
+    return h.hexdigest()
+
+
 def uid(*parts) -> str:
     return digest(json.dumps(parts, ensure_ascii=False, separators=(",", ":")).encode())
 
@@ -125,6 +134,13 @@ CREATE TABLE IF NOT EXISTS version_materials(
  reason TEXT NOT NULL,reviewer TEXT NOT NULL,PRIMARY KEY(version_id,resource_id));
 CREATE TABLE IF NOT EXISTS retrieval_metadata(
  snapshot_id TEXT PRIMARY KEY REFERENCES snapshots(id),original_name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS transfers(
+ resource_id TEXT PRIMARY KEY REFERENCES resources(id),filename TEXT NOT NULL,received INTEGER NOT NULL,
+ prefix_sha TEXT NOT NULL,etag TEXT,last_modified TEXT,total INTEGER,final_url TEXT,mime TEXT,
+ original_name TEXT,state TEXT NOT NULL,restart_required INTEGER NOT NULL DEFAULT 0,updated REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS transfer_events(
+ id INTEGER PRIMARY KEY,resource_id TEXT NOT NULL REFERENCES resources(id),at REAL NOT NULL,
+ event TEXT NOT NULL,received INTEGER NOT NULL,detail TEXT NOT NULL);
 """
 
 
@@ -134,13 +150,14 @@ class Store:
         self.home.mkdir(parents=True, exist_ok=True)
         (self.home/"objects").mkdir(exist_ok=True)
         (self.home/"derived").mkdir(exist_ok=True)
+        (self.home/"partials").mkdir(exist_ok=True)
         self.db = sqlite3.connect(self.home/"atlas.sqlite", timeout=30)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
         if 'refresh' not in {r[1] for r in self.db.execute('PRAGMA table_info(jobs)')}:
             self.db.execute('ALTER TABLE jobs ADD COLUMN refresh INTEGER NOT NULL DEFAULT 0')
-        self.db.execute("UPDATE meta SET value='2' WHERE key='schema'")
+        self.db.execute("UPDATE meta SET value='3' WHERE key='schema'")
         self.db.commit()
 
     def rows(self, sql, args=()):
@@ -165,7 +182,7 @@ class Store:
         target = self.object_path(sha)
         target.parent.mkdir(exist_ok=True)
         if target.exists():
-            if digest(target.read_bytes()) != sha:
+            if file_digest(target) != sha:
                 raise ValueError("Existing object failed integrity check")
         else:
             temp = target.with_suffix("." + uuid.uuid4().hex + ".tmp")
@@ -182,6 +199,43 @@ class Store:
                             (sid, resource_id, sha, mime, time.time(), url))
         return sid
 
+    def install_file(self, rid, path, sha, size, mime, final_url, check=None, job=None):
+        """Publish only a complete private staging file; recover a crash after rename."""
+        path=Path(path).resolve()
+        if path.parent != (self.home/'partials').resolve():
+            raise ValueError('Staging file must be inside private partials')
+        target=self.object_path(sha)
+        source=path if path.exists() else target
+        if source.stat().st_size!=size or file_digest(source,check)!=sha:
+            raise ValueError('Completed file failed size/SHA verification')
+        target.parent.mkdir(exist_ok=True)
+        sid=uid(rid,sha)
+        self.db.execute('BEGIN IMMEDIATE')
+        try:
+            if job and not self.db.execute("SELECT 1 FROM jobs WHERE id=? AND token=? AND state='running'",(job['id'],job['token'])).fetchone():
+                raise RuntimeError('Stale worker lease')
+            if target.exists():
+                if target.stat().st_size!=size or file_digest(target,check)!=sha:
+                    raise ValueError('Existing object failed integrity check')
+            else:
+                os.replace(path,target)
+            self.db.execute('INSERT OR IGNORE INTO blobs VALUES(?,?)',(sha,size))
+            self.db.execute('INSERT OR IGNORE INTO snapshots VALUES(?,?,?,?,?,?)',
+                            (sid,rid,sha,mime,time.time(),final_url))
+            self.db.commit()
+        except BaseException:
+            self.db.rollback(); raise
+        # Only our validated staging path, never the original or an external file.
+        if path.exists(): path.unlink()
+        return sid
+
+    def storage_bytes(self):
+        return sum(p.stat().st_size for p in self.home.rglob('*') if p.is_file())
+
+    def payload_bytes(self):
+        return sum(p.stat().st_size for folder in ('objects','partials')
+                   for p in (self.home/folder).rglob('*') if p.is_file())
+
     def attempt(self, rid, status, http_status=None, error=None, sid=None):
         with self.db:
             self.db.execute("INSERT INTO attempts(resource_id,at,status,http_status,error,snapshot_id) VALUES(?,?,?,?,?,?)",
@@ -194,6 +248,8 @@ class Store:
             self.db.execute("INSERT OR IGNORE INTO jobs(id,resource_id,state,due) VALUES(?,?,?,?)",(ident,rid,'done' if obtained else 'pending',time.time()))
             if refresh:
                 self.db.execute("UPDATE jobs SET state='pending',tries=0,due=?,token=NULL,lease_until=NULL,refresh=1 WHERE id=? AND state!='running'",(time.time(),ident))
+                if not self.db.execute("SELECT 1 FROM jobs WHERE id=? AND state='running'",(ident,)).fetchone():
+                    self.db.execute('UPDATE transfers SET restart_required=1 WHERE resource_id=?',(rid,))
         return ident
 
     def claim(self, lease_seconds=180, allowed_hosts=None, resource_ids=None, acquisition_first=False):
@@ -221,6 +277,14 @@ class Store:
             self.db.rollback()
             raise
 
+    def resume(self, rid):
+        """Requeue a paused transfer without discarding its verified checkpoint."""
+        with self.db:
+            changed=self.db.execute("""UPDATE jobs SET state='pending',due=?,tries=0,last_error=NULL
+                WHERE resource_id=? AND state IN ('pending','retry','deferred')""",(time.time(),rid)).rowcount
+        if not changed: raise ValueError('No resumable job; running, done and blocked jobs are unchanged')
+        return {'resource_id':rid,'checkpoint_preserved':True}
+
     def finish(self, job, state, error=None, delay=0):
         with self.db:
             changed = self.db.execute("UPDATE jobs SET state=?,last_error=?,due=?,lease_until=NULL,token=NULL WHERE id=? AND token=?",
@@ -230,7 +294,7 @@ class Store:
 
     def verify(self):
         bad = [r["sha"] for r in self.rows("SELECT sha FROM blobs")
-               if not self.object_path(r["sha"]).exists() or digest(self.object_path(r["sha"]).read_bytes()) != r["sha"]]
+               if not self.object_path(r["sha"]).exists() or file_digest(self.object_path(r["sha"])) != r["sha"]]
         return {"sqlite":self.db.execute("PRAGMA integrity_check").fetchone()[0],
                 "foreign_keys":len(self.rows("PRAGMA foreign_key_check")),"bad_objects":bad,
                 "objects":self.db.execute("SELECT count(*) FROM blobs").fetchone()[0]}

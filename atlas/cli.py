@@ -20,8 +20,12 @@ def main():
     crawl=sub.add_parser('crawl',help='Resume bounded traversal from an explicit educational root')
     crawl.add_argument('url'); crawl.add_argument('--budget',type=int,default=10)
     crawl.add_argument('--max-depth',type=int,default=4); crawl.add_argument('--max-frontier',type=int,default=5000)
-    crawl.add_argument('--max-requests',type=int,default=50); crawl.add_argument('--max-total-mib',type=int,default=128)
-    crawl.add_argument('--max-file-mib',type=int,default=32); crawl.add_argument('--seconds',type=int,default=300)
+    for runner in (run,crawl):
+        runner.add_argument('--max-requests',type=int,default=50); runner.add_argument('--max-total-mib',type=int,default=128)
+        runner.add_argument('--max-file-mib',type=int,default=1024); runner.add_argument('--seconds',type=int,default=300)
+        runner.add_argument('--max-storage-gib',type=int,default=20); runner.add_argument('--reserve-free-mib',type=int,default=1024)
+    sub.add_parser('transfers',help='Incomplete local bytes and validators; not library documents')
+    sub.add_parser('resume',help='Requeue a deferred/retry job preserving .part').add_argument('resource_id')
     sub.add_parser('frontier').add_argument('--limit',type=int,default=100)
     sub.add_parser('library').add_argument('output')
     links=sub.add_parser("links"); links.add_argument("--contains",default=""); links.add_argument("--limit",type=int,default=30)
@@ -45,20 +49,23 @@ def main():
     args=p.parse_args()
     s=Store(args.home)
     out=None
-    if args.command=="init": out={"home":str(s.home),"schema":2}
+    if args.command=="init": out={"home":str(s.home),"schema":3}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
-    elif args.command=="run":
-        if not 1<=args.budget<=100: p.error("budget must be 1..100")
-        out=Fetcher(s,args.allow).run(args.budget)
-    elif args.command=='crawl':
+    elif args.command in {'crawl','run'}:
         from .crawl import Crawl
-        if not (1<=args.budget<=1000 and 1<=args.max_requests<=2000 and 1<=args.max_total_mib<=4096
-                and 1<=args.max_file_mib<=128 and 1<=args.seconds<=3600):
-            p.error('Invalid bounded crawl limits; file cap is 128 MiB pending streaming media support')
-        crawler=Crawl(s,args.url,args.max_depth,args.max_frontier)
-        fetcher=Fetcher(s,[],max_bytes=args.max_file_mib*1024*1024)
+        if not (1<=args.budget<=1000 and 1<=args.max_requests<=2000 and 1<=args.max_total_mib<=65536
+                and 1<=args.max_file_mib<=32768 and 1<=args.seconds<=3600
+                and 1<=args.max_storage_gib<=4096 and 64<=args.reserve_free_mib<=1048576):
+            p.error('Invalid limits: file 1..32768 MiB, storage 1..4096 GiB, reserve >=64 MiB, time <=3600 s')
+        crawler=Crawl(s,args.url,args.max_depth,args.max_frontier) if args.command=='crawl' else None
+        fetcher=Fetcher(s,[] if crawler else args.allow,max_bytes=args.max_file_mib*1024*1024)
+        fetcher.max_storage_bytes=args.max_storage_gib*1024**3
+        fetcher.min_free_bytes=args.reserve_free_mib*1024**2
         try: out=fetcher.run(args.budget,crawler,args.max_requests,args.max_total_mib*1024*1024,args.seconds)
         finally: fetcher.client.close()
+    elif args.command=='transfers':
+        out=s.rows('SELECT t.*,r.url FROM transfers t JOIN resources r ON r.id=t.resource_id')
+    elif args.command=='resume': out=s.resume(args.resource_id)
     elif args.command=='frontier':
         out=s.rows('''SELECT e.*,r.url FROM crawl_edges e JOIN resources r ON r.id=e.target_id
             WHERE e.state!='admitted' ORDER BY e.state,e.reason LIMIT ?''',(args.limit,))

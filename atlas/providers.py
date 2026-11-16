@@ -30,6 +30,11 @@ def provider_links(store, sid):
     kind=provider(url)
     if p.hostname not in {'api.github.com','cloud-api.yandex.net','www.youtube.com','drive.google.com','docs.google.com','github.com'}:
         return
+    if store.object_path(snap['sha']).stat().st_size>32*1024*1024:
+        with store.db:
+            store.db.execute('INSERT OR REPLACE INTO provider_states VALUES(?,?,?)',
+                             (sid,'metadata_parse_deferred_size','{"complete":false}'))
+        return
     ctxs=store.rows('SELECT context FROM provider_contexts WHERE resource_id=?',(snap['resource_id'],))
     ctx=json.loads(ctxs[0]['context']) if ctxs else {}
     def state(name, details):
