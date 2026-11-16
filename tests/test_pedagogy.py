@@ -26,6 +26,9 @@ def test_individual_analysis_and_history(tmp_path):
 
 
 def test_route_requires_prerequisites_and_pins_assessments(tmp_path):
+    from bs4 import BeautifulSoup
+    from atlas.presentation import write_report
+
     s,args=setup(tmp_path)
     fragment=annotate(s,**args)
     step={'fragment_id':fragment['fragment_id'],'reason':'introduce elimination','transition':'start from arithmetic'}
@@ -33,6 +36,16 @@ def test_route_requires_prerequisites_and_pins_assessments(tmp_path):
     trajectory(s,'Route',['arithmetic'],[step],'Partial route')
     assert fragment['assessment_id'] in s.rows('SELECT plan FROM trajectories')[0]['plan']
     compare(s,fragment['fragment_id'],fragment['fragment_id'],'insufficient_data',['clarity'],'No second source','Test only')
+    revised = annotate(s, **{**args, 'analysis':{**args['analysis'], 'clarity':'Revised clarity'}})
+    output = tmp_path / 'report.html'
+    write_report(s, output)
+    report = BeautifulSoup(output.read_text('utf8'), 'html.parser')
+    first_anchor = 'a-' + fragment['assessment_id']
+    revised_anchor = 'a-' + revised['assessment_id']
+    assert len(report.find_all('a', href='#'+first_anchor)) == 3
+    assert report.find(id=first_anchor) and report.find(id=revised_anchor)
+    assert not report.find('a', href='#'+revised_anchor)
+    assert 'Revised clarity' in report.find(id=revised_anchor).get_text()
     with pytest.raises(ValueError): compare(s,fragment['fragment_id'],fragment['fragment_id'],'best_overall',['size'],'Larger','None')
     s.db.close()
 

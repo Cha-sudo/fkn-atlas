@@ -232,7 +232,10 @@ def import_local(store, path, source_url=None):
     after=path.stat()
     if (before.st_size,before.st_mtime_ns)!=(after.st_size,after.st_mtime_ns):
         raise ValueError('Local file changed during import; staging retained, no snapshot published')
-    sid=store.install_file(rid,staging,sha,before.st_size,mimetypes.guess_type(path.name)[0] or 'application/octet-stream',url)
+    mime = mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
+    if path.suffix.lower() == '.ipynb':
+        mime = 'application/x-ipynb+json'
+    sid=store.install_file(rid,staging,sha,before.st_size,mime,url)
     with store.db:
         store.db.execute('INSERT OR IGNORE INTO retrieval_metadata VALUES(?,?)',(sid,path.name))
     store.attempt(rid,"local_import",sid=sid)

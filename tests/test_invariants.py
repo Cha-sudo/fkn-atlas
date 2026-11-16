@@ -119,7 +119,9 @@ def test_archive_never_extracts(s,tmp_path):
 def test_notebook_and_vtt_are_unexecuted(s,tmp_path):
     path=tmp_path/'lecture.ipynb'
     path.write_text(json.dumps({'cells':[{'cell_type':'code','source':['raise RuntimeError()']}]}))
-    assert import_local(s,path)[1]=='notebook_unexecuted'
+    snapshot, status = import_local(s, path, 'https://example.org/lesson?file=1')
+    assert status == 'notebook_unexecuted'
+    assert s.rows('SELECT mime FROM snapshots WHERE id=?', (snapshot,))[0]['mime'] == 'application/x-ipynb+json'
     vtt=tmp_path/'lecture.vtt'; vtt.write_text('WEBVTT\n\n00:01.000 --> 00:02.000\nmatrix rank\n')
     assert import_local(s,vtt)[1]=='timed_transcript_only'
     assert s.rows("SELECT locator FROM chunks WHERE quality='transcript_not_board_review'")[0]['locator'].startswith('time:')

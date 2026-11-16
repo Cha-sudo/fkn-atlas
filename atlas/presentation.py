@@ -43,23 +43,85 @@ def write_report(store, output):
     blocks.append('</table></section>')
     for route in store.rows('SELECT t.* FROM trajectories t WHERE revision=(SELECT max(revision) FROM trajectories WHERE title=t.title) ORDER BY created'):
         plan=json.loads(route['plan'])
-        blocks.append('<section><h2>'+esc(route['title'])+'</h2><p>'+esc(plan['limitations'])+'</p><ol>')
+        blocks.append('<section><h2>'+esc(route['title'])+'</h2><p>'+esc(plan['limitations'])+
+                      '</p><p>Предпосылки: '+esc(', '.join(plan.get('initial_knowledge', [])))+'</p><ol>')
         for step in plan['steps']:
             title=store.rows('SELECT title FROM fragments WHERE id=?',(step['fragment_id'],))[0]['title']
-            blocks.append(f'<li><a href="#f-{esc(step["fragment_id"])}">{esc(title)}</a><p>{esc(step["reason"])}</p><small>{esc(step["transition"])}</small></li>')
+            link = 'a-'+step['assessment_id'] if step.get('assessment_id') else 'f-'+step['fragment_id']
+            blocks.append(f'<li><a href="#{esc(link)}">{esc(title)}</a><p>{esc(step["reason"])}</p><small>{esc(step["transition"])}</small></li>')
         blocks.append('</ol></section>')
+    comparisons = store.rows('''SELECT c.*,l.title AS left_title,r.title AS right_title
+        FROM comparisons c JOIN fragments l ON l.id=c.left_fragment
+        JOIN fragments r ON r.id=c.right_fragment ORDER BY c.created''')
+    if comparisons:
+        relation_names = {
+            'full_replacement':'Полное замещение в указанном объёме',
+            'partial_replacement':'Частичное замещение',
+            'clearer_explanation':'Более ясное объяснение',
+            'deeper_theory':'Углубление теории',
+            'additional_practice':'Дополнительная практика',
+            'alternative_approach':'Альтернативный подход',
+            'unique_content':'Уникальное содержание',
+            'insufficient_data':'Недостаточно данных',
+            'rejected':'Отклонено',
+        }
+        blocks.append('<section><h2>Сравнения фрагментов</h2>')
+        for item in comparisons:
+            dimensions = json.loads(item['dimensions'])
+            refs = dimensions.get('assessment_refs', [])
+            links = []
+            for index, side in enumerate(('left', 'right')):
+                link = 'a-'+refs[index] if index < len(refs) else 'f-'+item[side+'_fragment']
+                links.append(f'<a href="#{esc(link)}">{esc(item[side+"_title"])}</a>')
+            blocks.append(f'<details><summary>{esc(relation_names.get(item["relation"],item["relation"]))}</summary>'
+                          f'<p>{" / ".join(links)}</p><p>{esc(item["reason"])}</p>'
+                          f'<p>{esc(item["limitations"])}</p>')
+            criteria = dimensions.get('criteria', dimensions)
+            if isinstance(criteria, dict):
+                blocks.append('<ul>'+''.join(f'<li>{esc(key)}: {esc(value)}</li>'
+                                              for key,value in criteria.items())+'</ul>')
+            elif isinstance(criteria, list):
+                blocks.append('<ul>'+''.join(f'<li>{esc(value)}</li>' for value in criteria)+'</ul>')
+            blocks.append('</details>')
+        blocks.append('</section>')
     labels={'functions':'Образовательные функции','completeness':'Полнота','depth':'Глубина','correctness':'Корректность','clarity':'Ясность','sequence':'Последовательность','proofs':'Доказательства','examples':'Примеры','illustrations':'Иллюстрации','exercises':'Упражнения','prerequisites':'Предпосылки','learning_outputs':'Результаты обучения','uniqueness':'Уникальность','source_quality':'Источник','limitations':'Ограничения','confidence':'Уверенность','check_method':'Метод проверки'}
-    for f in store.rows('SELECT f.*,a.analysis,a.reviewer FROM fragments f JOIN assessments a ON a.fragment_id=f.id WHERE a.version=(SELECT max(version) FROM assessments WHERE fragment_id=f.id) ORDER BY f.created'):
-        blocks.append(f'<section id="f-{f["id"]}"><h2>{esc(f["title"])}</h2><p>{esc(f["topic"])}</p><table>')
-        for k,v in json.loads(f['analysis']).items():
-            blocks.append(f'<tr><th>{esc(labels.get(k,k))}</th><td>{esc(", ".join(v) if isinstance(v,list) else v)}</td></tr>')
-        blocks.append('</table><h3>Проверяемые основания</h3>')
+    for f in store.rows('SELECT * FROM fragments ORDER BY created'):
+        blocks.append(f'<section id="f-{esc(f["id"])}"><h2>{esc(f["title"])}</h2>'
+                      f'<p>{esc(f["topic"])} · {esc(", ".join(json.loads(f["subtopics"])))}</p>')
         for a in json.loads(f['anchors']):
-            source=store.rows('SELECT c.locator,s.sha,r.url FROM chunks c JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id JOIN resources r ON r.id=s.resource_id WHERE c.id=?',(a['chunk_id'],))[0]
-            blocks.append(f'<p><a href="{esc(source["url"])}">Источник · {esc(source["locator"])}</a><br><small>SHA-256: <code>{source["sha"]}</code></small></p><details><summary>Исходный фрагмент</summary><pre>{esc(a["quote"])}</pre></details>')
+            source=store.rows('SELECT c.locator,s.id,s.sha,r.url FROM chunks c JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id JOIN resources r ON r.id=s.resource_id WHERE c.id=?',(a['chunk_id'],))[0]
+            versions = store.rows('''SELECT v.program,v.year,v.course,v.stream FROM versions v
+                WHERE v.source_snapshot=? OR EXISTS(
+                    SELECT 1 FROM version_snapshots b WHERE b.version_id=v.id AND b.snapshot_id=?)''',
+                (source['id'],source['id']))
+            scope = ' / '.join(' · '.join(v[k] for k in ('program','year','course','stream')) for v in versions)
+            blocks.append(f'<p><a href="{esc(source["url"])}">Источник · {esc(source["locator"])}</a><br>'
+                          f'<small>{esc(scope or "Версия курса не подтверждена")}<br>'
+                          f'Снимок: <code>{esc(source["id"])}</code><br>SHA-256: <code>{esc(source["sha"])}</code></small></p>'
+                          f'<details><summary>Исходный фрагмент</summary><pre>{esc(a["quote"])}</pre></details>')
+        for assessment in store.rows('SELECT * FROM assessments WHERE fragment_id=? ORDER BY version DESC',(f['id'],)):
+            blocks.append(f'<div id="a-{esc(assessment["id"])}"><h3>Оценка · версия {assessment["version"]}</h3>'
+                          f'<p>{esc(assessment["reviewer"])}</p><table>')
+            for name,value in json.loads(assessment['analysis']).items():
+                detail = ', '.join(value) if isinstance(value,list) else value
+                blocks.append(f'<tr><th>{esc(labels.get(name,name))}</th><td>{esc(detail)}</td></tr>')
+            blocks.append('</table></div>')
         blocks.append('</section>')
     for decision in stats['latest_decisions']:
-        blocks.append('<section><h2>Проверка восполнения: '+esc(decision['verdict'])+'</h2><p>'+esc(decision['reason'])+'</p><p>Покрыто: '+esc(', '.join(json.loads(decision['covered'])))+'</p><p>Осталось: '+esc(', '.join(json.loads(decision['uncovered'])))+'</p></section>')
+        lesson = store.rows('''SELECT l.label,v.program,v.year,v.course FROM lessons l
+            JOIN versions v ON v.id=l.version_id WHERE l.id=?''',(decision['lesson_id'],))[0]
+        heading = ' · '.join(lesson[k] for k in ('program','year','course','label'))
+        blocks.append(f'<section><h2>{esc(heading)}</h2><p>Решение {decision["version"]} · {esc(decision["verdict"])}</p>'
+                      f'<p>{esc(decision["reason"])}</p><p>Покрыто: {esc(", ".join(json.loads(decision["covered"])))}</p>'
+                      f'<p>Осталось: {esc(", ".join(json.loads(decision["uncovered"])))}</p>')
+        for evidence in store.rows('''SELECT ev.quote,ev.check_method,c.locator,s.sha,r.url FROM evidence ev
+            JOIN chunks c ON c.id=ev.chunk_id JOIN extractions e ON e.id=c.extraction_id
+            JOIN snapshots s ON s.id=e.snapshot_id JOIN resources r ON r.id=s.resource_id
+            WHERE ev.review_id=?''',(decision['id'],)):
+            blocks.append(f'<details><summary>{esc(evidence["locator"])}</summary>'
+                          f'<p><a href="{esc(evidence["url"])}">Источник</a> · <code>{esc(evidence["sha"])}</code></p>'
+                          f'<pre>{esc(evidence["quote"])}</pre><p>{esc(evidence["check_method"])}</p></details>')
+        blocks.append('</section>')
     blocks.append('<section><h2>Ограничения автоматизации</h2><p>Поиск кандидатов лексический. Смысловые оценки внесены рецензентом по источникам. Видео не расшифрованы; полученные метаданные не считаются просмотром. OCR, автоматическая проверка доказательств и полноценный смысловой поиск ещё не реализованы.</p></section></html>')
     target=Path(output).resolve()
     target.write_text('\n'.join(blocks),encoding='utf8')
