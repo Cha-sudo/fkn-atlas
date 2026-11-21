@@ -22,6 +22,57 @@ def add_version(store, program, year, course, stream, source_snapshot, evidence_
     return ident
 
 
+def catalog_programs(store, version_id, programs, node_id, quote, reviewer, series):
+    """Record a reviewed catalog placement. The course identity stays pinned to its version."""
+    if not isinstance(programs, dict) or not programs or not reviewer.strip() or not quote.strip() or not series.strip():
+        raise ValueError("Specify programs, their source names, an exact quote and a reviewer")
+    for program, source_name in programs.items():
+        if not program.strip() or not source_name.strip() or not re.search(
+                r"(?<!\w)" + re.escape(source_name) + r"(?!\w)", quote):
+            raise ValueError("Each program needs its explicit name in the quoted source")
+    if len(set(programs.values())) != len(programs):
+        raise ValueError("Each program needs a distinct source name")
+    match = store.rows("""SELECT n.text,n.snapshot_id,v.source_snapshot,v.year,s.resource_id
+        FROM nodes n JOIN versions v ON v.id=? JOIN snapshots s ON s.id=v.source_snapshot
+        WHERE n.id=?""", (version_id, node_id))
+    if not match or quote not in match[0]["text"]:
+        raise ValueError("Expected an exact quote from a known source node")
+    source = match[0]
+    if source["snapshot_id"] != source["source_snapshot"]:
+        links = store.rows("SELECT headings FROM occurrences WHERE node_id=? AND target_id=?",
+                           (node_id, source["resource_id"]))
+        def years(text):
+            return {(start, end[-2:]) for start, end in
+                    re.findall(r"(?<!\d)(\d{4})/(\d{4}|\d{2})(?!\d)", text)}
+        if not any(years(source["year"]) & years(" ".join(json.loads(link["headings"]))) for link in links):
+            raise ValueError("External evidence needs a direct catalog link under the version's academic year")
+    payload = json.dumps({"members": programs, "series": series}, ensure_ascii=False, sort_keys=True)
+    with store.db:
+        store.db.execute("BEGIN IMMEDIATE")
+        last = store.db.execute("""SELECT revision,programs,node_id,quote FROM catalog_program_reviews
+            WHERE version_id=? ORDER BY revision DESC LIMIT 1""", (version_id,)).fetchone()
+        if last and tuple(last)[1:] == (payload, node_id, quote):
+            return last["revision"]
+        revision = last["revision"] + 1 if last else 1
+        store.db.execute("INSERT INTO catalog_program_reviews VALUES(?,?,?,?,?,?)",
+                         (version_id, revision, payload, node_id, quote, reviewer))
+    return revision
+
+
+def catalog_section(store, lesson_id, title, position, quote):
+    """Index a lesson by an exact passage of its published plan."""
+    nodes = store.rows("""SELECT n.text FROM lessons l JOIN nodes n ON n.id=l.evidence_node
+        WHERE l.id=?""", (lesson_id,))
+    if not nodes or not title.strip() or not isinstance(position, int) or position < 1:
+        raise ValueError("A course section needs a title, positive position and registered lesson")
+    if not quote.strip() or quote not in nodes[0]["text"]:
+        raise ValueError("Section needs an exact quote from the lesson plan")
+    with store.db:
+        store.db.execute("INSERT OR IGNORE INTO catalog_sections VALUES(?,?,?,?)",
+                         (lesson_id, title, position, quote))
+    return lesson_id
+
+
 def add_lesson(store, version_id, label, position, topics, status, evidence_node, notes=""):
     if status not in LESSON_STATES or not isinstance(topics,list):
         raise ValueError("Invalid lesson state or topics")

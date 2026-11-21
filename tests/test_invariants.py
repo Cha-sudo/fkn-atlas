@@ -283,6 +283,52 @@ def test_private_catalog_shows_plan_and_link_state(s, tmp_path):
     assert page.find(id='v-'+version)
 
 
+def test_joint_course_navigation_preserves_versions_and_scope(s, tmp_path):
+    from bs4 import BeautifulSoup
+    from atlas.research import catalog_programs, catalog_section
+    from atlas.presentation import write_catalog
+
+    lesson, _ = plan(s)
+    first, = s.rows('SELECT * FROM versions')
+    page = first['source_snapshot']
+    node = first['evidence_node']
+    program = first['program']
+    series = 'Algebra · shared main stream'
+    shared = {'Economics':'Economics', program:program}
+    evidence = f'Shared {program} and Economics'
+    url, = s.rows('SELECT r.url FROM snapshots sn JOIN resources r ON r.id=sn.resource_id WHERE sn.id=?',(page,))
+    index = s.snapshot(s.resource('https://example.org/archive'),
+                       f'<main><h1>2024/25</h1><a href="{url["url"]}">{evidence}</a></main>'.encode(),
+                       'text/html')
+    extract(s,index)
+    anchor, = s.rows('SELECT node_id FROM occurrences WHERE snapshot_id=?',(index,))
+    joint = add_version(s, program,'2024/2025',first['course'],'main',page,node)
+    separate = add_version(s, program,'2024/2025',first['course'],'pilot',page,node)
+    item = add_lesson(s,joint,'Lecture',1,['rank'],'unverified',node)
+    assign = dict(programs=shared,quote=evidence,node_id=anchor['node_id'],reviewer='test',series=series)
+    assert catalog_programs(s,joint,**assign) == catalog_programs(s,joint,**assign) == 1
+    other_year = add_version(s, program,'2022/23',first['course'],'main',page,node)
+    with pytest.raises(ValueError,match='academic year'):
+        catalog_programs(s,other_year,**assign)
+    with pytest.raises(ValueError,match='explicit name'):
+        catalog_programs(s,joint,**{**assign,'programs':{**shared,'Math':'Math'}})
+    phrase = s.rows('SELECT text FROM nodes WHERE id=?',(node,))[0]['text']
+    catalog_section(s,item,'Linear systems',1,phrase)
+    with pytest.raises(ValueError,match='exact quote'):
+        catalog_section(s,item,'Linear systems',1,'made-up condition')
+    output = tmp_path/'catalog.html'
+    stats = write_catalog(s, output)
+    dom = BeautifulSoup(output.read_text('utf8'),'html.parser')
+    assert stats['shared_courses'] == 1 and stats['lessons'] == 2
+    assert len(dom.select(f'a[href="#v-{joint}"]')) == 2
+    assert len(dom.find_all(id='lesson-'+item)) == 1
+    assert dom.find(id='v-'+separate).find_parent('section').h2.get_text() == program
+    assert dom.find(id='v-'+joint).find_parent('section').h2.get_text() == series
+    assert dom.find('a',href='#lesson-'+item) and dom.find(id='lesson-'+lesson)
+    assert len({e['id'] for e in dom.select('[id]')}) == len(dom.select('[id]'))
+    assert not s.rows('SELECT 1 FROM reviews') and not s.rows('SELECT 1 FROM version_snapshots')
+
+
 def test_same_course_historical_evidence_is_allowed(s):
     lid,c=plan(s)
     target=s.rows('SELECT * FROM versions')[0]

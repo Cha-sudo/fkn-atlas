@@ -135,6 +135,13 @@ CREATE TABLE IF NOT EXISTS version_materials(
 CREATE TABLE IF NOT EXISTS version_snapshots(
  version_id TEXT NOT NULL REFERENCES versions(id),snapshot_id TEXT NOT NULL REFERENCES snapshots(id),
  reason TEXT NOT NULL,reviewer TEXT NOT NULL,created REAL NOT NULL,PRIMARY KEY(version_id,snapshot_id));
+CREATE TABLE IF NOT EXISTS catalog_program_reviews(
+ version_id TEXT NOT NULL REFERENCES versions(id),revision INTEGER NOT NULL,
+ programs TEXT NOT NULL,node_id TEXT NOT NULL REFERENCES nodes(id),quote TEXT NOT NULL,
+ reviewer TEXT NOT NULL,PRIMARY KEY(version_id,revision));
+CREATE TABLE IF NOT EXISTS catalog_sections(
+ lesson_id TEXT NOT NULL REFERENCES lessons(id),title TEXT NOT NULL,position INTEGER NOT NULL,
+ quote TEXT NOT NULL,PRIMARY KEY(lesson_id,title,quote));
 CREATE TABLE IF NOT EXISTS retrieval_metadata(
  snapshot_id TEXT PRIMARY KEY REFERENCES snapshots(id),original_name TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS transfers(
@@ -160,7 +167,7 @@ class Store:
         self.db.executescript(SCHEMA)
         if 'refresh' not in {r[1] for r in self.db.execute('PRAGMA table_info(jobs)')}:
             self.db.execute('ALTER TABLE jobs ADD COLUMN refresh INTEGER NOT NULL DEFAULT 0')
-        self.db.execute("UPDATE meta SET value='4' WHERE key='schema'")
+        self.db.execute("UPDATE meta SET value='5' WHERE key='schema'")
         self.db.commit()
 
     def rows(self, sql, args=()):

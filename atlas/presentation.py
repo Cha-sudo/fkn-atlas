@@ -1,10 +1,13 @@
 """Private readable report; escaped source text and no embedded source scripts."""
 import html
+from collections import defaultdict
+import re
 from itertools import groupby
 import json
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
 from .research import report
+from .store import uid
 
 
 LESSON_LABELS = {
@@ -36,51 +39,164 @@ def write_catalog(store, output):
         '<p>Каталог содержит проверенные привязки к программе и году. '
         'Состояние занятия относится к зафиксированному объёму проверки.</p>',
     ]
-    programs = sorted({version['program'] for version in versions})
-    if programs:
+    reviews = store.rows('''SELECT c.*,r.url,n.path,s.sha FROM catalog_program_reviews c
+        JOIN nodes n ON n.id=c.node_id JOIN snapshots s ON s.id=n.snapshot_id
+        JOIN resources r ON r.id=s.resource_id WHERE c.revision=(SELECT max(x.revision)
+        FROM catalog_program_reviews x WHERE x.version_id=c.version_id)''')
+    membership = {row['version_id']: row for row in reviews}
+    by_program = defaultdict(list)
+    series = defaultdict(list)
+    for version in versions:
+        review = membership.get(version['id'])
+        programs = [version['program']]
+        if review:
+            data = json.loads(review['programs'])
+            programs = sorted(data['members'])
+            key = (data['series'], tuple(programs))
+            series[key].append(version)
+            version['series'] = key
+        for program in programs:
+            by_program[program].append(version)
+    names = sorted(by_program)
+    if names:
         pieces.append('<nav aria-label="Программы"><ul>'+''.join(
-            f'<li><a href="#program-{i}">{escape(name)}</a></li>' for i,name in enumerate(programs)
+            f'<li><a href="#program-{i}">{escape(name)}</a></li>' for i,name in enumerate(names)
         )+'</ul></nav>')
     else:
         pieces.append('<p>Версии курсов ещё не зарегистрированы.</p>')
-    count_lessons = 0
-    for i, (program, group) in enumerate(groupby(versions, key=lambda row: row['program'])):
+    for i, program in enumerate(names):
+        entries = by_program[program]
         pieces.append(f'<section id="program-{i}"><h2>{escape(program)}</h2>')
-        for year, yearly in groupby(group, key=lambda row: row['year']):
+        for key in sorted({v['series'] for v in entries if 'series' in v}):
+            pieces.append(f'<p><a href="#course-{uid(*key)}">{escape(key[0])}</a>'
+                          f' · {escape(" + ".join(key[1]))} · все годы</p>')
+        for year, year_entries in groupby(sorted(entries, key=lambda v: _catalog_year(v['year']),
+                                                 reverse=True), key=lambda v: _catalog_year(v['year'])):
             pieces.append(f'<h3>{escape(year)}</h3>')
-            for version in yearly:
-                lessons = store.rows('SELECT * FROM lessons WHERE version_id=? ORDER BY position,id',(version['id'],))
-                count_lessons += len(lessons)
-                title = f'{version["course"]} · {version["stream"]}'
-                pieces.append(f'<details id="v-{escape(version["id"])}"><summary>{escape(title)} · '
-                              f'{len(lessons)} записей плана</summary>'
-                              f'<p><a href="{escape(version["url"])}">Страница версии</a> · '
-                              f'<code>{escape(version["path"])}</code><br>'
-                              f'<small>SHA-256 <code>{escape(version["sha"])}</code></small></p>')
-                if not lessons:
-                    pieces.append('<p>Занятия для этой версии пока не внесены в каталог.</p>')
-                for lesson in lessons:
-                    _catalog_lesson(store, lesson, pieces)
-                materials = store.rows('''SELECT s.id,s.sha,r.url,m.original_name,b.reason
-                    FROM version_snapshots b JOIN snapshots s ON s.id=b.snapshot_id
-                    JOIN resources r ON r.id=s.resource_id
-                    LEFT JOIN retrieval_metadata m ON m.snapshot_id=s.id
-                    WHERE b.version_id=? ORDER BY r.url,s.created''',(version['id'],))
-                if materials:
-                    pieces.append('<details><summary>Проверенные привязки материалов к версии</summary><ul>')
-                    for material in materials:
-                        name = material['original_name'] or unquote(urlsplit(material['url']).path.rsplit('/',1)[-1])
-                        pieces.append(f'<li><a href="{escape(material["url"])}">{escape(name or "Источник")}</a>'
-                                      f'<p>{escape(material["reason"])}</p><small>Снимок '
-                                      f'<code>{escape(material["id"])}</code><br>SHA-256 '
-                                      f'<code>{escape(material["sha"])}</code></small></li>')
-                    pieces.append('</ul></details>')
-                pieces.append('</details>')
+            for version in sorted(year_entries, key=lambda v: (v['course'],v['stream'],v['id'])):
+                if 'series' in version:
+                    pieces.append(f'<p><a href="#v-{escape(version["id"])}">{escape(version["course"])}'
+                                  f' · {escape(version["stream"])}</a></p>')
+                else:
+                    _catalog_version(store, version, pieces)
         pieces.append('</section>')
+    for key, entries in sorted(series.items()):
+        pieces.append(f'<section id="course-{uid(*key)}"><h2>{escape(key[0])}</h2>'
+                      f'<p>{escape(" + ".join(key[1]))}</p>')
+        _catalog_topics(store, entries, pieces)
+        _catalog_readings(store, entries, pieces)
+        pieces.append('<h3>Версии по учебным годам</h3>')
+        for version in sorted(entries, key=lambda v: _catalog_year(v['year']), reverse=True):
+            _catalog_version(store, version, pieces, membership[version['id']])
+        pieces.append('</section>')
+    pieces.append("""<script>
+    function openTarget() {
+        let target = document.getElementById(location.hash.slice(1));
+        if (!target) return;
+        for (let item = target; item; item = item.parentElement) {
+            if (item.tagName === 'DETAILS') item.open = true;
+        }
+        target.scrollIntoView();
+    }
+    addEventListener('hashchange', openTarget);
+    openTarget();
+    </script>""")
     pieces.append('</html>')
     target = Path(output).resolve()
     target.write_text('\n'.join(pieces),encoding='utf8',newline='\n')
-    return {'output':str(target),'programs':len(programs),'versions':len(versions),'lessons':count_lessons}
+    return {'output':str(target),'programs':len(names),'versions':len(versions),
+            'lessons':store.rows('SELECT count(*) AS n FROM lessons')[0]['n'],'shared_courses':len(series)}
+
+
+def _catalog_year(year):
+    match = re.fullmatch(r'(\d{4})/(\d{4})', year)
+    if match and int(match[2]) == int(match[1]) + 1:
+        return match[1] + '/' + match[2][-2:]
+    return year
+
+
+def _catalog_topics(store, entries, pieces):
+    version_ids = [v['id'] for v in entries]
+    placeholders = ','.join('?' for _ in version_ids)
+    rows = store.rows(f'''SELECT c.title,c.quote,l.id,l.label,v.year FROM catalog_sections c
+        JOIN lessons l ON l.id=c.lesson_id JOIN versions v ON v.id=l.version_id
+        WHERE v.id IN ({placeholders}) ORDER BY c.position,c.title,v.year,l.position,l.id''',version_ids)
+    if rows:
+        pieces.append('<h3>Темы по опубликованным планам</h3>')
+    for title, matches in groupby(rows, key=lambda row: row['title']):
+        pieces.append(f'<details><summary>{html.escape(title)}</summary><ul>')
+        for row in matches:
+            pieces.append(f'<li><a href="#lesson-{row["id"]}">{html.escape(_catalog_year(row["year"]))}'
+                          f' · {html.escape(row["label"])}</a> · {html.escape(row["quote"])}</li>')
+        pieces.append('</ul></details>')
+
+
+def _catalog_readings(store, entries, pieces):
+    versions = {v['id']: _catalog_year(v['year']) for v in entries}
+    placeholders = ','.join('?' for _ in versions)
+    rows = store.rows(f'''WITH sources(version_id,snapshot_id) AS (
+        SELECT id,source_snapshot FROM versions WHERE id IN ({placeholders})
+        UNION SELECT version_id,snapshot_id FROM version_snapshots WHERE version_id IN ({placeholders})
+    ) SELECT f.id,f.title,f.anchors,a.analysis,src.version_id FROM fragments f
+        JOIN assessments a ON a.fragment_id=f.id AND a.version=(
+            SELECT max(newest.version) FROM assessments newest WHERE newest.fragment_id=f.id)
+        JOIN json_each(f.anchors) anchor JOIN chunks c ON c.id=json_extract(anchor.value,'$.chunk_id')
+        JOIN extractions e ON e.id=c.extraction_id JOIN sources src ON src.snapshot_id=e.snapshot_id
+        GROUP BY f.id,src.version_id HAVING count(*)=json_array_length(f.anchors)
+        ORDER BY f.title,f.id''', [*versions,*versions])
+    if rows:
+        pieces.append('<h3>Разобранные фрагменты материалов</h3>')
+    for _, matches in groupby(rows, key=lambda row: row['id']):
+        group = list(matches)
+        row = group[0]
+        years = ', '.join(sorted({versions[r['version_id']] for r in group}))
+        analysis = json.loads(row['analysis'])
+        pieces.append(f'<details><summary>{html.escape(row["title"])} · {html.escape(years)}</summary>')
+        for field in ('completeness','correctness','limitations'):
+            pieces.append(f'<p>{html.escape(analysis[field])}</p>')
+        for anchor in json.loads(row['anchors']):
+            source = store.rows('''SELECT c.locator,r.url,s.sha FROM chunks c
+                JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id
+                JOIN resources r ON r.id=s.resource_id WHERE c.id=?''',(anchor['chunk_id'],))[0]
+            pieces.append(f'<p><a href="{html.escape(source["url"])}">Оригинал · {html.escape(source["locator"])}</a>'
+                          f'<br><small>SHA-256 <code>{html.escape(source["sha"])}</code></small></p>')
+        pieces.append('</details>')
+
+
+def _catalog_version(store, version, pieces, membership=None):
+    escape = html.escape
+    lessons = store.rows('SELECT * FROM lessons WHERE version_id=? ORDER BY position,id',(version['id'],))
+    title = f'{version["course"]} · {version["stream"]}'
+    if membership:
+        title = version['year'] + ' · ' + title
+    pieces.append(f'<details id="v-{escape(version["id"])}"><summary>{escape(title)} · '
+                  f'записей в каталоге — {len(lessons)}</summary>'
+                  f'<p><a href="{escape(version["url"])}">Страница версии</a> · '
+                  f'<code>{escape(version["path"])}</code><br>'
+                  f'<small>SHA-256 <code>{escape(version["sha"])}</code></small></p>')
+    if membership:
+        pieces.append(f'<p>Программы по источнику · <a href="{escape(membership["url"])}">'
+                      f'{escape(membership["quote"])}</a><br><small>{escape(membership["path"])} · '
+                      f'SHA-256 <code>{escape(membership["sha"])}</code></small></p>')
+    if not lessons:
+        pieces.append('<p>Занятия для этой версии пока не внесены в каталог.</p>')
+    for lesson in lessons:
+        _catalog_lesson(store, lesson, pieces)
+    materials = store.rows('''SELECT s.id,s.sha,r.url,m.original_name,b.reason
+        FROM version_snapshots b JOIN snapshots s ON s.id=b.snapshot_id
+        JOIN resources r ON r.id=s.resource_id
+        LEFT JOIN retrieval_metadata m ON m.snapshot_id=s.id
+        WHERE b.version_id=? ORDER BY r.url,s.created''',(version['id'],))
+    if materials:
+        pieces.append('<details><summary>Проверенные привязки материалов к версии</summary><ul>')
+        for material in materials:
+            name = material['original_name'] or unquote(urlsplit(material['url']).path.rsplit('/',1)[-1])
+            pieces.append(f'<li><a href="{escape(material["url"])}">{escape(name or "Источник")}</a>'
+                          f'<p>{escape(material["reason"])}</p><small>Снимок '
+                          f'<code>{escape(material["id"])}</code><br>SHA-256 '
+                          f'<code>{escape(material["sha"])}</code></small></li>')
+        pieces.append('</ul></details>')
+    pieces.append('</details>')
 
 
 def _catalog_lesson(store, lesson, pieces):

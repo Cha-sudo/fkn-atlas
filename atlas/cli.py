@@ -6,7 +6,7 @@ from .store import Store
 from .network import Fetcher
 from .ingest import extract, import_local, render_page
 from .providers import capability, metadata_route
-from .research import candidates, report, export_graph, add_version, add_lesson, review, bind_material
+from .research import candidates, report, export_graph, add_version, add_lesson, review, bind_material, catalog_programs, catalog_section
 from .pedagogy import FUNCTIONS, annotate, compare, find_fragments, trajectory
 
 
@@ -45,7 +45,7 @@ def main():
     sub.add_parser("report-html").add_argument("output")
     plan=sub.add_parser("plan"); plan.add_argument("json_file",help="Curated version + lessons, with source nodes")
     rev=sub.add_parser("review"); rev.add_argument("json_file",help="Evidence decision; exact quote validation")
-    for name in ("annotate","compare","trajectory","bind"):
+    for name in ("annotate","compare","trajectory","bind","catalog-programs","catalog-section"):
         sub.add_parser(name).add_argument("json_file")
     sub.add_parser("fragments")
     assessed = sub.add_parser("find-fragments", help="Search reviewed fragments in versions of the lesson's course")
@@ -59,7 +59,7 @@ def main():
     args=p.parse_args()
     s=Store(args.home)
     out=None
-    if args.command=="init": out={"home":str(s.home),"schema":4}
+    if args.command=="init": out={"home":str(s.home),"schema":int(s.rows("SELECT value FROM meta WHERE key='schema'")[0]["value"])}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
     elif args.command in {'crawl','run'}:
         from .crawl import Crawl
@@ -112,8 +112,9 @@ def main():
         vid=add_version(s,**obj["version"])
         out={"version":vid,"lessons":[add_lesson(s,version_id=vid,**x) for x in obj["lessons"]]}
     elif args.command=="review": out=review(s,**json.loads(Path(args.json_file).read_text(encoding="utf8")))
-    elif args.command in {"annotate","compare","trajectory","bind"}:
-        fn={"annotate":annotate,"compare":compare,"trajectory":trajectory,"bind":bind_material}[args.command]
+    elif args.command in {"annotate","compare","trajectory","bind","catalog-programs","catalog-section"}:
+        fn={"annotate":annotate,"compare":compare,"trajectory":trajectory,"bind":bind_material,
+            "catalog-programs":catalog_programs,"catalog-section":catalog_section}[args.command]
         out=fn(s,**json.loads(Path(args.json_file).read_text(encoding="utf8")))
     elif args.command=="fragments": out=s.rows("SELECT f.*,a.analysis,a.version FROM fragments f JOIN assessments a ON a.fragment_id=f.id WHERE a.version=(SELECT max(version) FROM assessments WHERE fragment_id=f.id)")
     elif args.command=="find-fragments":
