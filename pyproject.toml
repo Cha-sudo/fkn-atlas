@@ -19,5 +19,8 @@ atlas = "atlas.cli:main"
 [tool.setuptools.packages.find]
 include = ["atlas*"]
 
+[tool.setuptools.package-data]
+atlas = ["learning/*.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

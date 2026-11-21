@@ -364,3 +364,30 @@ def test_discovery_path_does_not_assign_other_course_material(s):
     assert source_belongs_to_version(s,chunk,other)
     with pytest.raises(ValueError,match='Cross-course'):
         review(s,lid,'partial',['rank'],['examples'],'Similar content','test',[{**evidence,'source_version_id':other}])
+
+
+def test_course_entry_and_stream_headings(s, tmp_path):
+    from bs4 import BeautifulSoup
+    from atlas.presentation import write_catalog
+
+    _, snapshot = html(s, '<main><h2>Информация для пилотного потока</h2><p>Geometry</p>'
+                       '<h2>Информация для основного потока</h2><p>Equations</p>'
+                       '<h2>Архив</h2><p>Stream unknown</p></main>')
+    rows = s.rows("SELECT * FROM nodes WHERE snapshot_id=? AND tag='p' ORDER BY ordinal", (snapshot,))
+    course = 'Линейная алгебра и геометрия'
+    archive = add_version(s, 'ПМИ', '2016/17', course, 'поток не указан', snapshot, rows[0]['id'])
+    ids = [add_lesson(s, archive, 'Лекция 1', 1, [r['text']], 'unverified', r['id']) for r in rows]
+    output = tmp_path/'catalog.html'
+    write_catalog(s, output)
+    assert not (tmp_path/'atlas-lessons').exists()
+    add_version(s, 'ПМИ', '2025/26', course, 'основной', snapshot, rows[1]['id'])
+    write_catalog(s, output)
+    page = BeautifulSoup(output.read_text('utf8'), 'html.parser')
+    path = page.find('a', string=lambda t: t and 'Начать линейную алгебру' in t)['href']
+    unit = BeautifulSoup((tmp_path/path).read_text('utf8'), 'html.parser')
+    assert unit.h1.get_text() == 'Матрицы и первые операции'
+    assert len(unit.select('#check li details')) == 5
+    for ident, expected in zip(ids, ('Пилотный поток','Основной поток','Поток не установлен')):
+        item = page.find(id='lesson-'+ident)
+        assert item.parent.summary.get_text().startswith(expected)
+        assert len(page.find_all(id='lesson-'+ident)) == 1

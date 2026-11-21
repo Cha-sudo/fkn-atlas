@@ -3,6 +3,7 @@ import html
 from collections import defaultdict
 import re
 from itertools import groupby
+from importlib.resources import files
 import json
 from pathlib import Path
 from urllib.parse import urlsplit, unquote
@@ -24,6 +25,7 @@ LESSON_LABELS = {
 def write_catalog(store, output):
     """Browse confirmed course identities alongside the actual registered plan rows."""
     escape = html.escape
+    target = Path(output).resolve()
     versions = store.rows('''SELECT v.*, r.url, s.sha, n.path FROM versions v
         JOIN snapshots s ON s.id=v.source_snapshot JOIN resources r ON r.id=s.resource_id
         JOIN nodes n ON n.id=v.evidence_node ORDER BY v.program,v.year DESC,v.course,v.stream,v.id''')
@@ -58,6 +60,14 @@ def write_catalog(store, output):
         for program in programs:
             by_program[program].append(version)
     names = sorted(by_program)
+    introductory_versions = {v['id'] for v in versions if v['program']=='ПМИ'
+                             and v['course']=='Линейная алгебра и геометрия' and v['stream']=='основной'}
+    start_link = '<p><a href="atlas-lessons/matrices.html">Начать линейную алгебру ПМИ · Матрицы и первые операции</a></p>'
+    if introductory_versions:
+        destination = target.parent/'atlas-lessons'/'matrices.html'
+        destination.parent.mkdir(exist_ok=True)
+        destination.write_bytes(files('atlas').joinpath('learning','matrices.html').read_bytes())
+        pieces.append(start_link)
     if names:
         pieces.append('<nav aria-label="Программы"><ul>'+''.join(
             f'<li><a href="#program-{i}">{escape(name)}</a></li>' for i,name in enumerate(names)
@@ -83,6 +93,8 @@ def write_catalog(store, output):
     for key, entries in sorted(series.items()):
         pieces.append(f'<section id="course-{uid(*key)}"><h2>{escape(key[0])}</h2>'
                       f'<p>{escape(" + ".join(key[1]))}</p>')
+        if any(v['id'] in introductory_versions for v in entries):
+            pieces.append(start_link)
         _catalog_topics(store, entries, pieces)
         _catalog_readings(store, entries, pieces)
         pieces.append('<h3>Версии по учебным годам</h3>')
@@ -102,7 +114,6 @@ def write_catalog(store, output):
     openTarget();
     </script>""")
     pieces.append('</html>')
-    target = Path(output).resolve()
     target.write_text('\n'.join(pieces),encoding='utf8',newline='\n')
     return {'output':str(target),'programs':len(names),'versions':len(versions),
             'lessons':store.rows('SELECT count(*) AS n FROM lessons')[0]['n'],'shared_courses':len(series)}
@@ -165,8 +176,13 @@ def _catalog_readings(store, entries, pieces):
 
 def _catalog_version(store, version, pieces, membership=None):
     escape = html.escape
-    lessons = store.rows('SELECT * FROM lessons WHERE version_id=? ORDER BY position,id',(version['id'],))
+    lessons = store.rows('''SELECT l.*,ctx.stream AS section_stream,ctx.heading_path
+        FROM lessons l LEFT JOIN lesson_streams ctx ON ctx.lesson_id=l.id
+        WHERE l.version_id=? ORDER BY ctx.stream,l.position,l.id''',(version['id'],))
     title = f'{version["course"]} · {version["stream"]}'
+    sectioned = any(l['section_stream'] for l in lessons)
+    if sectioned:
+        title = f'{version["course"]} · потоки по разделам страницы'
     if membership:
         title = version['year'] + ' · ' + title
     pieces.append(f'<details id="v-{escape(version["id"])}"><summary>{escape(title)} · '
@@ -180,8 +196,15 @@ def _catalog_version(store, version, pieces, membership=None):
                       f'SHA-256 <code>{escape(membership["sha"])}</code></small></p>')
     if not lessons:
         pieces.append('<p>Занятия для этой версии пока не внесены в каталог.</p>')
-    for lesson in lessons:
-        _catalog_lesson(store, lesson, pieces)
+    for stream, group in groupby(lessons, key=lambda l: l['section_stream']):
+        items = list(group)
+        if sectioned:
+            pieces.append(f'<details><summary>{escape(stream or "Поток не установлен")} · '
+                          f'занятий в плане — {len(items)}</summary>')
+        for lesson in items:
+            _catalog_lesson(store, lesson, pieces)
+        if sectioned:
+            pieces.append('</details>')
     materials = store.rows('''SELECT s.id,s.sha,r.url,m.original_name,b.reason
         FROM version_snapshots b JOIN snapshots s ON s.id=b.snapshot_id
         JOIN resources r ON r.id=s.resource_id
@@ -206,6 +229,9 @@ def _catalog_lesson(store, lesson, pieces):
                   f' · {escape(label)}</summary>')
     if lesson['notes']:
         pieces.append(f'<p>{escape(lesson["notes"])}</p>')
+    if lesson['section_stream']:
+        pieces.append(f'<p>{escape(lesson["section_stream"])} · заголовок источника '
+                      f'<code>{escape(lesson["heading_path"])}</code></p>')
     topics = json.loads(lesson['topics'])
     if topics:
         pieces.append('<ul>'+''.join(f'<li>{escape(topic)}</li>' for topic in topics)+'</ul>')

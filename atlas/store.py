@@ -81,6 +81,15 @@ CREATE TABLE IF NOT EXISTS lessons(
 CREATE TABLE IF NOT EXISTS lesson_materials(
  lesson_id TEXT NOT NULL REFERENCES lessons(id),resource_id TEXT NOT NULL REFERENCES resources(id),
  occurrence_id TEXT REFERENCES occurrences(id),PRIMARY KEY(lesson_id,resource_id,occurrence_id));
+CREATE VIEW IF NOT EXISTS lesson_streams AS
+ SELECT l.id AS lesson_id, h.id AS heading_id, h.path AS heading_path, h.text AS heading,
+        CASE h.text WHEN 'Информация для основного потока' THEN 'Основной поток'
+                    WHEN 'Информация для пилотного потока' THEN 'Пилотный поток' END AS stream
+ FROM lessons l JOIN nodes n ON n.id=l.evidence_node
+ JOIN nodes h ON h.id=(SELECT x.id FROM nodes x WHERE x.snapshot_id=n.snapshot_id
+     AND x.tag IN ('h1','h2') AND x.ordinal<=n.ordinal ORDER BY x.ordinal DESC LIMIT 1)
+ WHERE json_extract(n.headings,'$[0]') IN ('Информация для основного потока','Информация для пилотного потока')
+ AND h.tag='h2' AND h.text=json_extract(n.headings,'$[0]');
 CREATE TABLE IF NOT EXISTS reviews(
  id TEXT PRIMARY KEY,lesson_id TEXT NOT NULL REFERENCES lessons(id),version INTEGER NOT NULL,
  verdict TEXT NOT NULL,covered TEXT NOT NULL,uncovered TEXT NOT NULL,reason TEXT NOT NULL,
