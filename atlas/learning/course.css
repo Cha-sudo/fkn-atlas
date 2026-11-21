@@ -1,0 +1,51 @@
+*{box-sizing:border-box}
+body{margin:0;background:#faf9f5;color:#202d32;font:17px/1.55 system-ui,sans-serif}
+main{max-width:850px;margin:auto;padding:30px 22px 56px}
+nav,.refs,header>small{color:#485c63;font-size:.91rem}
+nav{display:flex;gap:8px 22px;flex-wrap:wrap;border-block:1px solid #b9c8c7;padding:10px 0}
+a,summary{color:#075764}
+h1,h2,h3{line-height:1.16;text-wrap:balance}
+h1,h2{font-family:Georgia,serif}
+h1{font-size:clamp(33px,5vw,53px);margin:.3em 0}
+h2{font-size:1.85rem;margin:1.35em 0 .45em}
+h3{font-size:1.12rem;margin:1.15em 0 .25em}
+p{margin:.55em 0}
+.formula{display:flex;align-items:center;flex-wrap:wrap;gap:.42em;font:1.15em Georgia,serif;margin:12px 0 15px}
+.matrix{display:inline-block;border-left:2px solid #43535c;border-right:2px solid #43535c;border-radius:7px;padding:.12em .25em;vertical-align:middle}
+.matrix table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.matrix td{text-align:center;min-width:1.7em;padding:0 .2em}
+.focus{background:#d1ebdf;color:#102c24}
+.matrix button{min-width:2.1em;min-height:2.1em;color:#17424c;background:#fff;border:1px solid #81989a;border-radius:3px;cursor:pointer;font:inherit}
+.matrix button[aria-pressed=true]{background:#155962;color:white}
+a:focus-visible,summary:focus-visible,button:focus-visible{outline:3px solid #b56813;outline-offset:2px}
+.example{border-left:3px solid #42816e;background:#edf3ed;padding:4px 14px 12px;margin:12px 0}
+.note{color:#364e53}
+details{margin:.7em 0}
+summary{cursor:pointer;text-decoration:underline;text-underline-offset:.17em}
+code{overflow-wrap:anywhere}
+footer{border-top:1px solid #b9c8c7;margin-top:32px;padding-top:10px}
+.refs a{white-space:nowrap}
+ol{padding-left:1.5em}
+li{margin:.45em 0}
+#calculation{font-weight:600}
+sub,sup{line-height:0}
+section{scroll-margin:12px}
+@media(max-width:500px){main{padding:16px 14px}
+.formula{gap:.25em}
+}
+@media print{nav{display:none}
+body{background:#fff}
+h2,h3{break-after:avoid}
+}
+
+.course-name{margin:0 0 .3rem;color:#3b5558;font-size:.92rem}
+.course-nav{display:flex;align-items:baseline;justify-content:space-between;gap:8px 20px;border:0;margin:.6rem 0 1rem;padding:.6rem 0}
+.course-nav .next{font-weight:650}
+.course-nav.bottom{border-top:1px solid #bac9c5;margin:26px 0 0;padding-top:16px}
+.outline{padding:0;list-style:none}
+.outline li{margin:0;border-top:1px solid #b9c8c7;padding:15px 0}
+.outline a,.outline strong{display:block;font-size:1.13rem}
+.outline p{margin:.2em 0}
+.equations{white-space:pre-wrap;font:1.1rem/1.5 Cambria,Georgia,serif}
+.matrix-steps{font:1.05rem/1.65 Cambria,Georgia,serif;font-variant-numeric:tabular-nums;white-space:pre-wrap}
+@media(max-width:560px){.course-nav{display:grid;justify-content:stretch}.course-nav a{padding:3px 0}}

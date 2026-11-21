@@ -6,7 +6,7 @@ from itertools import groupby
 from importlib.resources import files
 import json
 from pathlib import Path
-from urllib.parse import urlsplit, unquote
+from urllib.parse import quote, urlsplit, unquote
 from .research import report
 from .store import uid
 
@@ -62,11 +62,19 @@ def write_catalog(store, output):
     names = sorted(by_program)
     introductory_versions = {v['id'] for v in versions if v['program']=='ПМИ'
                              and v['course']=='Линейная алгебра и геометрия' and v['stream']=='основной'}
-    start_link = '<p><a href="atlas-lessons/matrices.html">Начать линейную алгебру ПМИ · Матрицы и первые операции</a></p>'
+    start_link = ('<p><a href="atlas-lessons/matrices.html">Начать линейную алгебру ПМИ · '
+                  'Урок 1. Матрицы и первые операции</a> · '
+                  '<a href="atlas-lessons/index.html">Оглавление курса</a></p>')
     if introductory_versions:
-        destination = target.parent/'atlas-lessons'/'matrices.html'
-        destination.parent.mkdir(exist_ok=True)
-        destination.write_bytes(files('atlas').joinpath('learning','matrices.html').read_bytes())
+        destination = target.parent/'atlas-lessons'
+        destination.mkdir(exist_ok=True)
+        learning = files('atlas').joinpath('learning')
+        for name in ('course.css', 'matrices.html', 'gauss.html'):
+            (destination/name).write_bytes(learning.joinpath(name).read_bytes())
+        outline = learning.joinpath('index.html').read_text(encoding='utf8')
+        catalog_link = f'<a href="../{quote(target.name, safe="")}">Все программы Атласа</a>'
+        (destination/'index.html').write_text(outline.replace('<!-- catalog-link -->', catalog_link),
+                                               encoding='utf8', newline='\n')
         pieces.append(start_link)
     if names:
         pieces.append('<nav aria-label="Программы"><ul>'+''.join(

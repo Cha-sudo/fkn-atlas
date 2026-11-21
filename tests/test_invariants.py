@@ -385,8 +385,21 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     page = BeautifulSoup(output.read_text('utf8'), 'html.parser')
     path = page.find('a', string=lambda t: t and 'Начать линейную алгебру' in t)['href']
     unit = BeautifulSoup((tmp_path/path).read_text('utf8'), 'html.parser')
-    assert unit.h1.get_text() == 'Матрицы и первые операции'
+    assert unit.h1.get_text() == 'Урок 1. Матрицы и первые операции'
     assert len(unit.select('#check li details')) == 5
+    course_dir = (tmp_path/path).parent
+    assert (course_dir/unit.select_one('link[rel=stylesheet]')['href']).is_file()
+    next_links = unit.select('a[rel=next]')
+    assert len(next_links) == 2 and len({a['href'] for a in next_links}) == 1
+    second = BeautifulSoup((course_dir/next_links[0]['href']).read_text('utf8'), 'html.parser')
+    assert second.h1.get_text() == 'Урок 2. Метод Гаусса и общее решение'
+    assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
+    assert len(second.select('#check li details')) == 3
+    outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
+    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html']
+    assert 'Запланирован' in outline.select_one('ol li:last-child').get_text()
+    assert not outline.select('ol li:last-child a')
+    assert (course_dir/outline.footer.a['href']).resolve() == output
     for ident, expected in zip(ids, ('Пилотный поток','Основной поток','Поток не установлен')):
         item = page.find(id='lesson-'+ident)
         assert item.parent.summary.get_text().startswith(expected)
