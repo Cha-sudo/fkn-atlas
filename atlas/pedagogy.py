@@ -49,6 +49,61 @@ def annotate(store, title, topic, subtopics, anchors, analysis, reviewer):
     return {"fragment_id":fid,"assessment_id":aid,"version":version}
 
 
+def find_fragments(store, lesson_id, function=None, outcome=None, limit=20):
+    """Find assessed fragments in versions of this course by their teaching purpose."""
+    if not 1 <= limit <= 1000:
+        raise ValueError("Fragment limit must be 1..1000")
+    if function is not None and function not in FUNCTIONS:
+        raise ValueError("Unknown educational function")
+    target = store.rows("""SELECT v.program,v.course FROM lessons l
+        JOIN versions v ON v.id=l.version_id WHERE l.id=?""", (lesson_id,))
+    if not target:
+        raise ValueError("Unknown target lesson")
+    versions = store.rows("""SELECT id,program,year,course,stream,source_snapshot
+        FROM versions WHERE program=? AND course=? ORDER BY year,stream,id""",
+        (target[0]["program"], target[0]["course"]))
+    memberships = {}
+    for version in versions:
+        memberships.setdefault(version["source_snapshot"], set()).add(version["id"])
+    bindings = store.rows("""SELECT b.snapshot_id,b.version_id FROM version_snapshots b
+        JOIN versions v ON v.id=b.version_id WHERE v.program=? AND v.course=?""",
+        (target[0]["program"], target[0]["course"]))
+    for binding in bindings:
+        memberships.setdefault(binding["snapshot_id"], set()).add(binding["version_id"])
+
+    rows = store.db.execute("""SELECT f.id fragment_id,f.title,f.topic,f.subtopics,
+        a.id assessment_id,a.analysis FROM fragments f JOIN assessments a ON a.fragment_id=f.id
+        WHERE a.version=(SELECT max(newest.version) FROM assessments newest WHERE newest.fragment_id=f.id)
+        AND (? IS NULL OR ? IN (SELECT value FROM json_each(a.analysis,'$.functions')))
+        AND (? IS NULL OR ? IN (SELECT value FROM json_each(a.analysis,'$.learning_outputs')))
+        ORDER BY f.title,f.id""", (function, function, outcome, outcome))
+    results = []
+    for row in rows:
+        anchors = store.rows("""SELECT c.id chunk_id,c.locator,s.id snapshot_id,s.sha,r.url,
+            json_extract(anchor.value,'$.quote') quote FROM fragments f,json_each(f.anchors) anchor
+            JOIN chunks c ON c.id=json_extract(anchor.value,'$.chunk_id')
+            JOIN extractions e ON e.id=c.extraction_id JOIN snapshots s ON s.id=e.snapshot_id
+            JOIN resources r ON r.id=s.resource_id WHERE f.id=? ORDER BY anchor.key""", (row["fragment_id"],))
+        if not anchors:
+            continue
+        # A multi-page fragment must belong as a whole to at least one exact version.
+        common = set.intersection(*(memberships.get(a["snapshot_id"], set()) for a in anchors))
+        if not common:
+            continue
+        analysis = json.loads(row["analysis"])
+        results.append({
+            "fragment_id": row["fragment_id"], "assessment_id": row["assessment_id"],
+            "title": row["title"], "topic": row["topic"], "subtopics": json.loads(row["subtopics"]),
+            "functions": analysis["functions"], "learning_outputs": analysis["learning_outputs"],
+            "prerequisites": analysis["prerequisites"], "limitations": analysis["limitations"],
+            "source_versions": [v for v in versions if v["id"] in common], "anchors": anchors,
+            "target_lesson_id": lesson_id, "lesson_fit": "unverified",
+        })
+        if len(results) == limit:
+            break
+    return results
+
+
 def compare(store, left_fragment, right_fragment, relation, dimensions, reason, limitations):
     if relation not in RELATIONS or not dimensions or not reason or not limitations:
         raise ValueError("Comparison needs an explicit relation, dimensions, reason and limitations")

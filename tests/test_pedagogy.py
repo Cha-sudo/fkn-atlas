@@ -64,3 +64,46 @@ def test_comparison_cannot_infer_course_from_link_reachability(tmp_path):
     bind_material(s,vid,material,'Manually checked course membership','reviewer')
     compare(s,fragment,fragment,'partial_replacement',['content'],'Identity fixture after binding','No content fit inferred automatically')
     s.db.close()
+
+
+def test_find_fragments_uses_current_assessment_and_one_complete_version(tmp_path):
+    from atlas.pedagogy import find_fragments
+    from atlas.research import add_lesson, add_version, bind_material
+
+    s, args = setup(tmp_path)
+    material = s.rows("SELECT snapshot_id FROM extractions")[0]["snapshot_id"]
+    page = s.snapshot(s.resource("https://example.org/course"),
+                      b'<main><p>Plan <a href="/material">notes</a><a href="/extra">exercise</a></p></main>',
+                      "text/html")
+    extract(s, page)
+    node = s.rows("SELECT id FROM nodes WHERE snapshot_id=? AND tag='p'", (page,))[0]["id"]
+    base = add_version(s, "Program", "2023", "Course", "Stream", page, node)
+    adjacent = add_version(s, "Program", "2024", "Course", "Stream", page, node)
+    other = add_version(s, "Different program", "2023", "Course", "Stream", page, node)
+    lesson = add_lesson(s, base, "Lecture", 1, ["elimination"], "partial", node)
+    foreign_lesson = add_lesson(s, other, "Lecture", 1, ["elimination"], "partial", node)
+    bind_material(s, base, material, "First explicit assignment", "test")
+    extra = s.snapshot(s.resource("https://example.org/extra"), b"Practice problem.", "text/plain")
+    extract(s, extra)
+    extra_chunk = s.rows("""SELECT c.id FROM chunks c JOIN extractions e ON e.id=c.extraction_id
+                            WHERE e.snapshot_id=?""", (extra,))[0]["id"]
+    bind_material(s, adjacent, extra, "Assignment in the adjacent version", "test")
+    fragment = annotate(s, **args)
+    both = annotate(s, **{**args, "title":"A mixed fragment", "anchors":[*args["anchors"],
+                    {"chunk_id":extra_chunk, "quote":"Practice problem."}]})
+    assert find_fragments(s, foreign_lesson) == []
+    result, = find_fragments(s, lesson, "method_demonstration", "elimination", limit=1)
+    assert result["assessment_id"] == fragment["assessment_id"]
+    assert result["source_versions"][0]["id"] == base
+    assert result["anchors"][0]["snapshot_id"] == material and result["lesson_fit"] == "unverified"
+    bind_material(s, adjacent, material, "Second explicit assignment", "test")
+    revised = annotate(s, **{**args, "analysis":{**args["analysis"], "functions":["assessment"],
+                                                  "learning_outputs":["practice"]}})
+    match, = find_fragments(s, lesson, "method_demonstration", "elimination")
+    assert match["fragment_id"] == both["fragment_id"] and [v["id"] for v in match["source_versions"]] == [adjacent]
+    match, = find_fragments(s, lesson, "assessment", "practice")
+    assert match["assessment_id"] == revised["assessment_id"]
+    assert find_fragments(s, lesson, "assessment", "elimination") == []
+    with pytest.raises(ValueError, match="Unknown target"):
+        find_fragments(s, "missing")
+    s.db.close()

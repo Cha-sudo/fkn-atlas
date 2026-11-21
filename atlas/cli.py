@@ -7,7 +7,7 @@ from .network import Fetcher
 from .ingest import extract, import_local, render_page
 from .providers import capability, metadata_route
 from .research import candidates, report, export_graph, add_version, add_lesson, review, bind_material
-from .pedagogy import annotate, compare, trajectory
+from .pedagogy import FUNCTIONS, annotate, compare, find_fragments, trajectory
 
 
 def main():
@@ -48,6 +48,11 @@ def main():
     for name in ("annotate","compare","trajectory","bind"):
         sub.add_parser(name).add_argument("json_file")
     sub.add_parser("fragments")
+    assessed = sub.add_parser("find-fragments", help="Search reviewed fragments in versions of the lesson's course")
+    assessed.add_argument("--lesson", required=True)
+    assessed.add_argument("--function", choices=sorted(FUNCTIONS))
+    assessed.add_argument("--outcome", help="Exact learning outcome from a fragment assessment")
+    assessed.add_argument("--limit", type=int, default=20)
     sub.add_parser("trajectories")
     adapter=sub.add_parser("provider"); adapter.add_argument("url"); adapter.add_argument("--enqueue-metadata",action="store_true")
     render=sub.add_parser("render"); render.add_argument("snapshot_id"); render.add_argument("page",type=int); render.add_argument("output")
@@ -111,6 +116,8 @@ def main():
         fn={"annotate":annotate,"compare":compare,"trajectory":trajectory,"bind":bind_material}[args.command]
         out=fn(s,**json.loads(Path(args.json_file).read_text(encoding="utf8")))
     elif args.command=="fragments": out=s.rows("SELECT f.*,a.analysis,a.version FROM fragments f JOIN assessments a ON a.fragment_id=f.id WHERE a.version=(SELECT max(version) FROM assessments WHERE fragment_id=f.id)")
+    elif args.command=="find-fragments":
+        out = find_fragments(s,args.lesson,args.function,args.outcome,args.limit)
     elif args.command=="trajectories": out=s.rows("SELECT * FROM trajectories")
     elif args.command=="provider":
         out=capability(args.url)
