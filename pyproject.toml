@@ -20,7 +20,7 @@ atlas = "atlas.cli:main"
 include = ["atlas*"]
 
 [tool.setuptools.package-data]
-atlas = ["learning/*.html", "learning/*.css"]
+atlas = ["learning/*.html", "learning/*.css", "learning/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

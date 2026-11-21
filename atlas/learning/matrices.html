@@ -1,11 +1,26 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Урок 1. Матрицы и первые операции · Линейная алгебра ПМИ</title>
-<link rel="stylesheet" href="course.css"></head><body><main>
+<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head><body><main>
 <header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 1. Матрицы и первые операции</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Далее → Урок 2. Метод Гаусса и общее решение</a></nav>
 <p>После раздела вы сможете прочитать матрицу, выполнить операции с ней и записать два линейных уравнения одним матричным равенством. Для начала достаточно уметь складывать и умножать числа со знаком.</p></header>
+<section id="video" class="lecture-video" aria-labelledby="video-heading">
+<h2 id="video-heading">Видеолекция</h2>
+<p class="recording-meta">Роман Авдеев · ПМИ, основной поток · 5 сентября 2022 · 1 ч 26 мин</p>
+<div class="inline-video" data-title="Линейная алгебра ПМИ · лекция 1 за 2022/23"></div>
+<a class="watch-recording" href="https://www.youtube.com/watch?v=m3sgbykms3Y" target="_blank" rel="noopener">
+<span class="play-icon" aria-hidden="true">▶</span> Смотреть и слушать лекцию 1 на YouTube</a>
+<p>Можно слушать с начала или сразу перейти к математике на 24:55. Для раздела о транспонировании посмотрите, как преподаватель меняет местами строки и столбцы. После фрагмента об умножении попробуйте вычислить одну клетку произведения в примере ниже.</p>
+<ul class="video-moments" aria-label="Моменты видеолекции">
+<li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=1495s" target="_blank" rel="noopener">24:55 · Переход к матрицам</a></li>
+<li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s" target="_blank" rel="noopener">45:00 · Векторы-столбцы</a></li>
+<li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s" target="_blank" rel="noopener">54:16 · Транспонирование</a></li>
+<li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s" target="_blank" rel="noopener">1:07:07 · Умножение строки на столбец</a></li>
+</ul>
+<p class="refs">Для просмотра нужен интернет. <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29" target="_blank" rel="noopener">Страница курса с записью</a> · <a href="https://www.youtube.com/watch?v=TraSEKLgUnw" target="_blank" rel="noopener">Запись той же темы за 2021/22</a>.</p>
+</section>
 <nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a></nav>
 <section id="shape"><h2>Как читать матрицу</h2><p>Пусть две мастерские выпускают по три вида деталей. Каждая строка таблицы описывает мастерскую, каждый столбец — вид детали. Таблица чисел с фиксированным порядком строк и столбцов называется <b>матрицей</b>. У матрицы размера <i>m</i> × <i>n</i> имеется <i>m</i> строк и <i>n</i> столбцов.</p>
 <div class="formula">Q = <span class="matrix"><table aria-label="Выпуск деталей двух мастерских"><tbody><tr><td>2</td><td>0</td><td>1</td></tr><tr><td>3</td><td>1</td><td>4</td></tr></tbody></table></span></div>
@@ -19,7 +34,7 @@
 <section id="transpose"><h2>Что меняется при транспонировании</h2><p>У матрицы <i>A</i><sup>T</sup> строки и столбцы поменялись ролями. Первая строка <i>A</i> становится первым столбцом <i>A</i><sup>T</sup>. В общем виде (<i>A</i><sup>T</sup>)<sub>ij</sub> = <i>a</i><sub>ji</sub>. Размер <i>m</i> × <i>n</i> превращается в <i>n</i> × <i>m</i>.</p>
 <div class="formula">A = <span class="matrix"><table aria-label="Матрица A, две строки и три столбца"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></span> <span>и</span> A<sup>T</sup> = <span class="matrix"><table aria-label="Транспонированная матрица A"><tbody><tr><td>1</td><td>−1</td></tr><tr><td>2</td><td>0</td></tr><tr><td>0</td><td>3</td></tr></tbody></table></span></div>
 <p>Число 2 перешло из позиции (1, 2) в позицию (2, 1). Второе транспонирование вернёт каждую клетку на прежнее место, поэтому (<i>A</i><sup>T</sup>)<sup>T</sup> = <i>A</i>. Транспонировать сумму можно по слагаемым: в клетке (i, j) обеих сторон равенства (<i>A</i> + <i>D</i>)<sup>T</sup> = <i>A</i><sup>T</sup> + <i>D</i><sup>T</sup> стоит <i>a</i><sub>ji</sub> + <i>d</i><sub>ji</sub>.</p>
-<p class="refs">Тема указана в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане лекции 1 за 2025/26</a>. Этот разбор и пример подготовлены для Атласа. В проверенных слайдах лекции 1 за 2023/24 и 2024/25 отдельного объяснения транспонирования нет.</p></section>
+<p class="refs">Устное объяснение начинается на <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s" target="_blank" rel="noopener">54:16 записи 2022/23</a>. Тема также указана в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане лекции 1 за 2025/26</a>. Числовой пример подготовлен для Атласа.</p></section>
 <section id="product"><h2>Как работает произведение матриц</h2><p>Если в мастерской выпускают 2, 0 и 1 деталь трёх видов, а одна деталь стоит соответственно 3, 5 и 7 рублей, общая стоимость равна 2 · 3 + 0 · 5 + 1 · 7 = 13 рублей. Строка количеств встретилась со столбцом цен. Так вычисляется одна клетка произведения.</p>
 <p>Если <i>A</i> имеет размер <i>m</i> × <i>n</i>, а <i>B</i> — <i>n</i> × <i>p</i>, то <i>C</i> = <i>AB</i> имеет размер <i>m</i> × <i>p</i>. Чтобы получить <i>c</i><sub>ij</sub>, берём строку <i>i</i> из <i>A</i> и столбец <i>j</i> из <i>B</i>, перемножаем их числа попарно и складываем произведения. Поэтому число столбцов первого множителя должно равняться числу строк второго.</p>
 <div class="example"><p><b>Выберите клетку результата.</b> Подсветка показывает, какие строка и столбец участвуют в расчёте.</p>

@@ -393,6 +393,17 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert len(next_links) == 2 and len({a['href'] for a in next_links}) == 1
     second = BeautifulSoup((course_dir/next_links[0]['href']).read_text('utf8'), 'html.parser')
     assert second.h1.get_text() == 'Урок 2. Метод Гаусса и общее решение'
+    assert (course_dir/'lecture-video.js').is_file()
+    from urllib.parse import parse_qs, urlsplit
+    for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
+                                   (second,'x6TG2Q1D2TE',[1069,3098,4042,4703])]:
+        video = doc.select_one('section#video')
+        assert doc.main.find('section') == video
+        assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id
+        assert doc.select_one('script[src="lecture-video.js"]')
+        assert video.select_one('.inline-video[data-title]')
+        assert [parse_qs(urlsplit(a['href']).query) for a in video.select('.video-moments a')] == [
+            {'v':[video_id], 't':[str(n)+'s']} for n in seconds]
     assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
     assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')

@@ -1,11 +1,26 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Урок 2. Метод Гаусса и общее решение · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"></head>
+<title>Урок 2. Метод Гаусса и общее решение · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head>
 <body><main><header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 2. Метод Гаусса и общее решение</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a href="index.html">Оглавление курса</a><a rel="prev" href="matrices.html">← Урок 1. Матрицы и первые операции</a></nav>
 <p class="note">Следующий в оглавлении — урок 3 «Однородные системы». Он запланирован.</p>
 <p>В первом уроке вы записали систему как <i>Ax = b</i>. Теперь научимся выяснять, есть ли у неё решения, и описывать их все. Работаем с вещественными числами.</p></header>
+<section id="video" class="lecture-video" aria-labelledby="video-heading">
+<h2 id="video-heading">Видеолекция</h2>
+<p class="recording-meta">Роман Авдеев · ПМИ, основной поток · 19 сентября 2022 · 1 ч 23 мин</p>
+<div class="inline-video" data-title="Линейная алгебра ПМИ · лекция 3 за 2022/23"></div>
+<a class="watch-recording" href="https://www.youtube.com/watch?v=x6TG2Q1D2TE" target="_blank" rel="noopener">
+<span class="play-icon" aria-hidden="true">▶</span> Смотреть и слушать лекцию 3 на YouTube</a>
+<p>Уроку 2 Атласа соответствует лекция 3 этого потока. На записи преподаватель показывает, как распознать ведущие столбцы и выразить главные неизвестные через свободные. Затем повторите этот шаг на числовом примере ниже.</p>
+<ul class="video-moments" aria-label="Моменты видеолекции">
+<li><a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=1069s" target="_blank" rel="noopener">17:49 · Ведущий элемент строки</a></li>
+<li><a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=3098s" target="_blank" rel="noopener">51:38 · Метод Гаусса</a></li>
+<li><a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=4042s" target="_blank" rel="noopener">1:07:22 · Какие неизвестные главные</a></li>
+<li><a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=4703s" target="_blank" rel="noopener">1:18:23 · Свободные неизвестные как параметры</a></li>
+</ul>
+<p class="refs">Для просмотра нужен интернет. <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29" target="_blank" rel="noopener">Страница курса с записью</a> · <a href="https://www.youtube.com/watch?v=ovoLsOTr20k" target="_blank" rel="noopener">Запись той же темы за 2021/22</a>.</p>
+</section>
 <nav aria-label="Разделы занятия"><a href="#rows">Преобразования строк</a><a href="#free">Свободные неизвестные</a><a href="#check">Самопроверка</a></nav>
 <section id="rows"><h2>Какие изменения сохраняют решения</h2>
 <p>Рассмотрим два уравнения с тремя неизвестными.</p>
@@ -21,6 +36,7 @@
 <p class="refs">Операции и сохранение решений разобраны в лекции 3 за 2025/26, с. 3–4. Определения и алгоритмы приведения даны на с. 5–10. <a href="https://drive.google.com/file/d/1-i_w_8eFOIbocpFwmxKSJwWZKUF-5Zj3/view">Оригинальные слайды ПМИ</a>.</p></section>
 <section id="free"><h2>Как прочитать все решения</h2>
 <p>У полученной матрицы ступенчатый вид. Первый ненулевой коэффициент первой строки стоит в столбце <i>x</i>, второй строки — в столбце <i>z</i>. Эти два столбца ведущие. В столбце <i>y</i> есть число 2, но ни одна строка с этого столбца не начинается. Поэтому <i>y</i> свободна.</p>
+<p class="refs">На доске преподаватель связывает главные неизвестные с ведущими столбцами. Затем объясняет, почему свободным неизвестным можно независимо присвоить параметры. <a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=4042s" target="_blank" rel="noopener">1:07:22 · выбор столбцов</a> · <a href="https://www.youtube.com/watch?v=x6TG2Q1D2TE&amp;t=4703s" target="_blank" rel="noopener">1:18:23 · роль параметров</a>.</p>
 <div class="example"><p>Положим <i>y = t</i>, где <i>t</i> — любое вещественное число. Из нижней строки получаем <i>z = 1</i>. Из верхней следует <i>x + 2t + 1 = 4</i>, то есть <i>x = 3 − 2t</i>.</p>
 <p><strong>Все решения</strong> имеют вид <i>(x, y, z) = (3 − 2t, t, 1)</i>.</p></div>
 <p>Проверка состоит из двух частей. Во-первых, подстановка даёт первое равенство (3 − 2t) + 2t + 1 = 4 и второе 2(3 − 2t) + 4t + 3 = 9 для любого <i>t</i>. Во-вторых, у всякого решения есть значение <i>y</i>. Если принять его за <i>t</i>, две строки вынуждают именно указанные <i>x</i> и <i>z</i>. Значит, ни одно решение не пропущено.</p>

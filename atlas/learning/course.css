@@ -46,6 +46,16 @@ h2,h3{break-after:avoid}
 .outline li{margin:0;border-top:1px solid #b9c8c7;padding:15px 0}
 .outline a,.outline strong{display:block;font-size:1.13rem}
 .outline p{margin:.2em 0}
+.lecture-video{margin:1.2rem 0 1.4rem;padding:1rem 1.2rem;background:#eef3ed;border-left:3px solid #477766}
+.lecture-video h2{margin:0 0 .3rem;font-size:1.55rem}
+.recording-meta{font-size:.93rem;color:#374e54}
+.watch-recording{display:inline-block;padding:.55em .9em;border-radius:5px;font-weight:650}
+.watch-recording{background:#145962;color:white;text-decoration:none}
+.watch-recording:hover{background:#10474e}
+.play-icon{margin-right:.3em}
+.video-moments{display:flex;flex-wrap:wrap;gap:.3rem 1.3rem;padding:0;list-style:none;font-size:.94rem}
+.video-moments li{margin:0}
+.inline-video iframe{display:block;width:100%;aspect-ratio:16/9;border:0;margin:.7em 0;background:#172829}
 .equations{white-space:pre-wrap;font:1.1rem/1.5 Cambria,Georgia,serif}
 .matrix-steps{font:1.05rem/1.65 Cambria,Georgia,serif;font-variant-numeric:tabular-nums;white-space:pre-wrap}
 @media(max-width:560px){.course-nav{display:grid;justify-content:stretch}.course-nav a{padding:3px 0}}

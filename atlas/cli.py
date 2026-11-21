@@ -29,6 +29,8 @@ def main():
     sub.add_parser('frontier').add_argument('--limit',type=int,default=100)
     sub.add_parser('library').add_argument('output')
     sub.add_parser('catalog',help='Write the private program and course catalog as HTML').add_argument('output')
+    serve=sub.add_parser('serve-course',help='Открыть локальный каталог по HTTP для встроенных видеолекций')
+    serve.add_argument('--port',type=int,default=8765)
     links=sub.add_parser("links"); links.add_argument("--contains",default=""); links.add_argument("--limit",type=int,default=30)
     follow=sub.add_parser("follow"); follow.add_argument("resource_id"); follow.add_argument("--refresh",action="store_true")
     imp=sub.add_parser("import"); imp.add_argument("path"); imp.add_argument("--source-url")
@@ -58,6 +60,24 @@ def main():
     render=sub.add_parser("render"); render.add_argument("snapshot_id"); render.add_argument("page",type=int); render.add_argument("output")
     args=p.parse_args()
     s=Store(args.home)
+    if args.command=='serve-course':
+        from functools import partial
+        from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+        from tempfile import TemporaryDirectory
+        from .presentation import write_catalog
+        if not 0<=args.port<=65535:
+            p.error('Port must be in 0..65535')
+        with TemporaryDirectory(prefix='fkn-atlas-reader-') as root:
+            write_catalog(s,Path(root)/'index.html')
+            s.db.close()
+            handler=partial(SimpleHTTPRequestHandler,directory=root)
+            with ThreadingHTTPServer(('127.0.0.1',args.port),handler) as server:
+                print(f'http://127.0.0.1:{server.server_port}/',flush=True)
+                try:
+                    server.serve_forever()
+                except KeyboardInterrupt:
+                    pass
+        return
     out=None
     if args.command=="init": out={"home":str(s.home),"schema":int(s.rows("SELECT value FROM meta WHERE key='schema'")[0]["value"])}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
