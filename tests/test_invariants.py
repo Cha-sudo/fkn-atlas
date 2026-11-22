@@ -408,6 +408,13 @@ def test_course_entry_and_stream_headings(s, tmp_path):
         assert len(doc.select('#check li > details')) == (4 if index == 0 else 3)
     _, systems, gauss, homogeneous, elementary, equations = lessons
     assert systems.select_one('#video a[href*="1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe"]')
+    other = systems.select_one('#trace-2021')
+    archive_id = other.select_one('.inline-video')['data-video-id']
+    assert archive_id == 'uPOYu99zYHU'
+    assert archive_id not in systems.select_one('.lecture-video .watch-recording')['href']
+    assert [link['href'] for link in other.select('a[href*="youtube.com/watch"]')] == [
+        f'https://www.youtube.com/watch?v={archive_id}&t={second}s' for second in (3860, 3900, 3960)
+    ]
     assert unit.select_one('#video a[href*="12TC_aols6gzchKDBK4cvNT5GqCaNpIG1"]')
     assert unit.select_one('#matrix-system a')['href'] == 'products-and-systems.html#matrix-system'
     assert systems.select_one('section#matrix-system')

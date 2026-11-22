@@ -36,6 +36,14 @@ def test_coverage_partitions_urls_and_checks_archived_html(tmp_path):
     assert coverage(tmp_path)['wiki_html'][0]['missing'] == 1
 
 
+def test_sampled_playback_survives_failed_request_without_claiming_video_bytes(tmp_path):
+    s = Store(tmp_path)
+    rid = s.resource('https://example.org/lecture')
+    s.attempt(rid, 'browser_playback_sampled')
+    s.attempt(rid, 'unavailable', 502)
+    assert coverage(tmp_path)['url_states'] == {'sampled_playback_without_snapshot': 1}
+
+
 def test_index_finish_and_host_identity(tmp_path):
     store = Store(tmp_path/'private')
     folder = tmp_path/'index'

@@ -183,6 +183,8 @@ def coverage(home=None, ledger=False, index_dir=None):
                 states[rid] = 'snapshot'
             elif rid in partial:
                 states[rid] = 'partial_bytes_only'
+            elif 'browser_playback_sampled' in outcomes.get(rid, {}):
+                states[rid] = 'sampled_playback_without_snapshot'
             elif rid in outcomes:
                 states[rid] = 'attempt_without_snapshot'
             else:
