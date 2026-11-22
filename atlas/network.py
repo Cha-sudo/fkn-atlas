@@ -226,7 +226,8 @@ class Fetcher:
             raise AccessError("robots.txt disallows URL")
         self.delay = max(self.delay,rp.crawl_delay(AGENT) or 0)
 
-    def run(self, budget=10, crawler=None, max_requests=100, total_bytes=128*1024*1024, seconds=300):
+    def run(self, budget=10, crawler=None, max_requests=100, total_bytes=128*1024*1024, seconds=300,
+            *, resource_ids=None):
         self.requests=self.bytes=0
         self.request_limit,self.byte_limit,self.deadline=max_requests,total_bytes,time.monotonic()+seconds
         self.crawler=crawler
@@ -238,7 +239,7 @@ class Fetcher:
             try: self.check_budget()
             except BudgetExceeded as e: stop=str(e); break
             job = self.store.claim(lease_seconds=600,allowed_hosts=None if crawler else self.allowed,
-                                   resource_ids=crawler.ids() if crawler else None,acquisition_first=bool(crawler))
+                                   resource_ids=crawler.ids() if crawler else resource_ids,acquisition_first=bool(crawler))
             if not job:
                 stop='no_ready_jobs'
                 break

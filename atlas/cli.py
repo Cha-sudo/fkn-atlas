@@ -17,6 +17,7 @@ def main():
     sub.add_parser("init")
     seed=sub.add_parser("seed"); seed.add_argument("urls",nargs="+"); seed.add_argument("--refresh",action="store_true")
     run=sub.add_parser("run"); run.add_argument("--allow",nargs="+",required=True); run.add_argument("--budget",type=int,default=10)
+    run.add_argument('--resource-id', action='append', help='Restrict the queue to these resource IDs (repeatable)')
     crawl=sub.add_parser('crawl',help='Resume bounded traversal from an explicit educational root')
     crawl.add_argument('url'); crawl.add_argument('--budget',type=int,default=10)
     crawl.add_argument('--max-depth',type=int,default=4); crawl.add_argument('--max-frontier',type=int,default=5000)
@@ -44,6 +45,11 @@ def main():
     cand.add_argument("--include-plans",action="store_true")
     nodes=sub.add_parser("nodes"); nodes.add_argument("snapshot_id"); nodes.add_argument("--contains",default="")
     sub.add_parser("report"); sub.add_parser("verify"); sub.add_parser("graph")
+    audit = sub.add_parser('coverage', help='Audit recorded URL, extraction and lesson coverage')
+    audit.add_argument('--ledger', action='store_true', help='Write per-URL records inside private ATLAS_HOME/derived')
+    audit.add_argument('--site-index', help='Directory containing saved MediaWiki allpages manifests and responses')
+    sub.add_parser('wiki-index', help='Collect a bounded allpages inventory into private storage').add_argument(
+        'host', choices=('fruitdet.ru','wikics.site'))
     sub.add_parser("report-html").add_argument("output")
     plan=sub.add_parser("plan"); plan.add_argument("json_file",help="Curated version + lessons, with source nodes")
     rev=sub.add_parser("review"); rev.add_argument("json_file",help="Evidence decision; exact quote validation")
@@ -59,6 +65,10 @@ def main():
     adapter=sub.add_parser("provider"); adapter.add_argument("url"); adapter.add_argument("--enqueue-metadata",action="store_true")
     render=sub.add_parser("render"); render.add_argument("snapshot_id"); render.add_argument("page",type=int); render.add_argument("output")
     args=p.parse_args()
+    if args.command == 'coverage':
+        from .audit import coverage
+        print(json.dumps(coverage(args.home, args.ledger, args.site_index), ensure_ascii=False, indent=2))
+        return
     s=Store(args.home)
     if args.command=='serve-course':
         from functools import partial
@@ -79,7 +89,10 @@ def main():
                     pass
         return
     out=None
-    if args.command=="init": out={"home":str(s.home),"schema":int(s.rows("SELECT value FROM meta WHERE key='schema'")[0]["value"])}
+    if args.command == 'wiki-index':
+        from .source_inventory import collect_site_index
+        out = collect_site_index(s, args.host)
+    elif args.command=="init": out={"home":str(s.home),"schema":int(s.rows("SELECT value FROM meta WHERE key='schema'")[0]["value"])}
     elif args.command=="seed": out=[s.enqueue(s.resource(u,"seed"),args.refresh) for u in args.urls]
     elif args.command in {'crawl','run'}:
         from .crawl import Crawl
@@ -91,7 +104,8 @@ def main():
         fetcher=Fetcher(s,[] if crawler else args.allow,max_bytes=args.max_file_mib*1024*1024)
         fetcher.max_storage_bytes=args.max_storage_gib*1024**3
         fetcher.min_free_bytes=args.reserve_free_mib*1024**2
-        try: out=fetcher.run(args.budget,crawler,args.max_requests,args.max_total_mib*1024*1024,args.seconds)
+        try: out=fetcher.run(args.budget,crawler,args.max_requests,args.max_total_mib*1024*1024,args.seconds,
+                             resource_ids=getattr(args, 'resource_id', None))
         finally: fetcher.client.close()
     elif args.command=='transfers':
         out=s.rows('SELECT t.*,r.url FROM transfers t JOIN resources r ON r.id=t.resource_id')
