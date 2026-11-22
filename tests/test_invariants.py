@@ -393,10 +393,16 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert len(next_links) == 2 and len({a['href'] for a in next_links}) == 1
     second = BeautifulSoup((course_dir/next_links[0]['href']).read_text('utf8'), 'html.parser')
     assert second.h1.get_text() == 'Урок 2. Метод Гаусса и общее решение'
+    assert [a['href'] for a in second.select('a[rel=next]')] == ['homogeneous.html'] * 2
+    third = BeautifulSoup((course_dir/'homogeneous.html').read_text('utf8'), 'html.parser')
+    assert third.h1.get_text() == 'Урок 3. Однородные системы'
+    assert [a['href'] for a in third.select('a[rel=prev]')] == ['gauss.html'] * 2
+    assert len(third.select('#check li details')) == 3
     assert (course_dir/'lecture-video.js').is_file()
     from urllib.parse import parse_qs, urlsplit
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
-                                   (second,'x6TG2Q1D2TE',[1069,3098,4042,4703])]:
+                                   (second,'x6TG2Q1D2TE',[1069,3098,4042,4703]),
+                                   (third,'Wg4HctY-2u4',[208,317,504,943,1190])]:
         video = doc.select_one('section#video')
         assert doc.main.find('section') == video
         assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id
@@ -407,7 +413,7 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
     assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
-    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html']
+    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html']
     assert 'Запланирован' in outline.select_one('ol li:last-child').get_text()
     assert not outline.select('ol li:last-child a')
     assert (course_dir/outline.footer.a['href']).resolve() == output
