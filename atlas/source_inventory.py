@@ -173,7 +173,7 @@ def pmi_plans(db, resources, lessons, lesson_links):
         for target, path, label in db.execute('SELECT target_id,path,label FROM occurrences WHERE snapshot_id=?', (sid,)):
             links[path.rsplit('/',1)[0]].append((target,path,label))
         plan = dict(lectures=0, without_links=0, link_occurrences=0, in_lesson=0, by_sha=0, player=0,
-                    url_reference_only=0, first_four_entries=0, first_four_matched=0)
+                    local_edition=0, url_reference_only=0, first_four_entries=0, first_four_matched=0)
         keys, lecture_paths = set(), set()
         for path, body in db.execute("SELECT path,text FROM nodes WHERE snapshot_id=? AND tag='p'", (sid,)):
             lecture = re.match(r'^Лекци[яи]\s+(\d+)', body, re.I)
@@ -195,8 +195,10 @@ def pmi_plans(db, resources, lessons, lesson_links):
                 displayed = by_sha.get(key, set())
                 players = linked.get('players', set())
                 referenced = linked.get('links', set())
+                local = linked.get('editions', set())
                 used = displayed | players | referenced
-                state = ('by_sha' if displayed else 'player' if players else 'url_reference_only' if referenced
+                state = ('by_sha' if displayed else 'player' if players else 'local_edition' if local
+                         else 'url_reference_only' if referenced
                          else 'lesson_notes_only' if linked.get('notes') else 'year_map_only' if linked.get('map')
                          else 'no_direct_lesson_match')
                 ledger.append({'year':year[1], 'snapshot':sid, 'sha':sha, 'lecture':number, 'path':linkpath,

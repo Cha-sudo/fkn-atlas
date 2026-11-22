@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sqlite3
+from html import unescape
 from collections import Counter, defaultdict, deque
 from contextlib import closing
 from importlib.resources import files
@@ -12,6 +13,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 
+from .excerpts import EDITION, edition_pdf
 from .store import canonical, digest
 from .source_inventory import material_key, pmi_plans, site_index, video_id
 
@@ -28,7 +30,7 @@ def is_root(url):
     return not parts.query and unquote(parts.path) in ROOT_PATHS.get(parts.hostname, ())
 
 
-def lesson_coverage(home, resources, blob_shas):
+def lesson_coverage(home, db, resources, blob_shas):
     learning = files('atlas').joinpath('learning')
     archive = json.loads(learning.joinpath('seminars.json').read_text('utf8'))
     placements = defaultdict(list)
@@ -40,7 +42,7 @@ def lesson_coverage(home, resources, blob_shas):
     papers = [sha for group in archive['group213'].values() for _, sha in group]
     papers += [sha for group in archive['handouts'].values() for _, _, sha in group['files']]
     videos, docs, lessons = set(), set(), {}
-    linked = defaultdict(lambda: {'links': set(), 'players': set(), 'notes': set(), 'map': set()})
+    linked = defaultdict(lambda: {'links': set(), 'players': set(), 'editions': set(), 'notes': set(), 'map': set()})
     for item in sorted(learning.iterdir(), key=lambda f: f.name):
         if not item.name.endswith('.html'):
             continue
@@ -52,6 +54,8 @@ def lesson_coverage(home, resources, blob_shas):
         if not soup.h1 or not re.match(r'Урок\s+\d+\.', soup.h1.get_text(strip=True)):
             continue
         selected = {video_id(a['href']) for a in soup.select('a.seminar-watch[href]')} - {None}
+        edition_links = {(unescape(url), f'{sha}:{page}'): (sha, page) for sha, page, url in EDITION.findall(html)}
+        editions = []
         for anchor in soup.select('main a[href]'):
             href = anchor['href']
             if not href.startswith(('http://', 'https://')) or anchor.find_parent('nav'):
@@ -61,10 +65,17 @@ def lesson_coverage(home, resources, blob_shas):
                 lookup['notes'].add(item.name)
                 continue
             lookup['links'].add(item.name)
+            edition = edition_links.get((href, anchor.get('data-edition')))
+            if edition:
+                sha, page = edition
+                if edition_pdf(home, db, sha, page, href) is not None:
+                    lookup['editions'].add(item.name)
+                    editions.append({'key': material_key(href), 'sha': sha, 'page': int(page)})
             if video_id(href) and set(anchor.get('class', ())) & {'watch-recording','clip-start','seminar-watch'}:
                 lookup['players'].add(item.name)
         originals = set(re.findall(r'<!--\s*(?:document|excerpt)\s+(?:board\s+)?([0-9a-f]{64})\b', html))
-        lessons[item.name] = {'seminar_ids': sorted(selected), 'original_shas': sorted(originals)}
+        lessons[item.name] = {'seminar_ids': sorted(selected), 'original_shas': sorted(originals),
+                              'local_editions': editions}
         videos.update(selected)
         docs.update(originals)
     ids = {video_id(row['url']) for row in resources.values()} - {None}
@@ -216,7 +227,7 @@ def coverage(home=None, ledger=False, index_dir=None):
                   ('resources','occurrences','snapshots','blobs','versions','lessons','fragments','assessments','jobs')}
         def counts_for(ids):
             return dict(Counter(states[t] for t in ids))
-        reader, crosswalk, linked = lesson_coverage(home, resources, shas)
+        reader, crosswalk, linked = lesson_coverage(home, db, resources, shas)
         plans, plan_entries = pmi_plans(db, resources, reader['lessons'], linked)
         result = {'counts': counts, 'url_states': counts_for(resources),
                   'occurrence_targets': counts_for(occurrences), 'root_reachable': counts_for(reachable),

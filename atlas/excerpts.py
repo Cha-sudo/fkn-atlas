@@ -2,8 +2,10 @@
 import html
 import re
 import warnings
+from io import BytesIO
 from pathlib import Path
 
+from .source_inventory import material_key
 from .store import digest
 
 
@@ -21,8 +23,34 @@ DOCUMENT = re.compile(r"<!-- document (?:(board) )?([0-9a-f]{64}) (\d+) \| ([^<>
 SEMINAR_STILL = re.compile(r"<!-- seminar-still ([0-9a-f]{64}) -->")
 
 
+# The public href remains usable in exports without the learner's private PDF.
+EDITION = re.compile(r'<a data-edition="([0-9a-f]{64}):([1-9][0-9]*)" href="([^"]+)">')
+
+
+def edition_pdf(home, db, sha, page, source_url):
+    from pypdf import PdfReader
+    from pypdf.errors import PyPdfError
+    source_key = material_key(source_url)
+    urls = db.execute("""SELECT r.url FROM snapshots s JOIN resources r ON r.id=s.resource_id
+                         WHERE s.sha=?""", (sha,))
+    if not any(material_key(url) == source_key for (url,) in urls):
+        return None
+    path = Path(home) / "objects" / sha[:2] / sha
+    if not path.is_file():
+        return None
+    data = path.read_bytes()
+    if digest(data) != sha or not data.startswith(b"%PDF-"):
+        return None
+    try:
+        if int(page) <= len(PdfReader(BytesIO(data)).pages):
+            return data
+    except (PyPdfError, ValueError, OSError, IndexError, KeyError):
+        pass
+    return None
+
+
 def render_excerpts(markup, store, destination, page_images=None):
-    if "<!-- excerpt " not in markup and "<!-- document " not in markup and "<!-- seminar-still " not in markup:
+    if not any(tag in markup for tag in ("<!-- excerpt ", "<!-- document ", "<!-- seminar-still ", "<a data-edition=")):
         return markup
     try:
         import pymupdf
@@ -50,6 +78,14 @@ def render_excerpts(markup, store, destination, page_images=None):
         if not path.is_file() or digest(path.read_bytes()) != sha:
             path.write_bytes(data)
         return f"originals/{path.name}"
+
+    def local_edition(match):
+        sha, page, source_url = match.groups()
+        data = edition_pdf(store.home, store.db, sha, page, html.unescape(source_url))
+        if data is None:
+            return f'<a href="{source_url}">'
+        url = copy_original(sha, data, "pdf")
+        return f'<a href="{url}#page={page}" data-source-url="{source_url}">'
 
     def page_image(page, sha, number):
         key = (sha, number)
@@ -154,4 +190,5 @@ def render_excerpts(markup, store, destination, page_images=None):
         path = copy_original(sha, data, "png")
         return f'<img class="seminar-still" src="{path}" alt="" loading="lazy">'
 
+    markup = EDITION.sub(local_edition, markup)
     return EXCERPT.sub(render, DOCUMENT.sub(render_document, SEMINAR_STILL.sub(seminar_still, markup)))

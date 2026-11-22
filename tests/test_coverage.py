@@ -88,6 +88,56 @@ def test_pmi_rows_keep_other_links_and_same_numbers_on_different_years(tmp_path)
     assert {x['state'] for x in lines} == {'no_direct_lesson_match','plan_row_without_anchor','outside_numbered_lecture_row'}
 
 
+def test_local_editions_require_the_linked_snapshot_and_a_readable_page(tmp_path, monkeypatch):
+    from io import BytesIO
+    from bs4 import BeautifulSoup
+    from pypdf import PdfWriter
+    from atlas.excerpts import render_excerpts
+    from atlas.store import digest
+
+    store = Store(tmp_path/'private')
+    learning = tmp_path/'learning'
+    learning.mkdir()
+    (learning/'seminars.json').write_text(json.dumps({
+        'years': {}, 'group213': {}, 'handouts': {}}), 'utf8')
+    monkeypatch.setattr('atlas.audit.files', lambda package: tmp_path)
+    writer = PdfWriter()
+    writer.add_blank_page(width=120, height=100)
+    content = BytesIO()
+    writer.write(content)
+    data = content.getvalue()
+    sha = digest(data)
+    url = 'https://example.org/lecture-2.pdf'
+    course = 'https://fruitdet.ru/wiki/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_(основной_поток)'
+    plan = f'<main><p>Лекция 2. <a href="{url}">Слайды</a></p></main>'
+    extract(store, store.snapshot(store.resource(course), plan.encode(), 'text/html'))
+    store.snapshot(store.resource(url + '?other'), data, 'application/pdf')
+    def markup(page):
+        return (f'<main><h1>Урок 2. Системы</h1><a data-edition="{sha}:{page}" '
+                f'href="{url}">2025/26</a></main>')
+
+    unit = learning/'systems.html'
+    unit.write_text(markup(1), 'utf8')
+    def counts():
+        return coverage(store.home)['pmi_lecture_plans']['2025/2026']
+    assert counts()['url_reference_only'] == 1
+    assert BeautifulSoup(render_excerpts(markup(1), store, tmp_path), 'html.parser').a['href'] == url
+    store.snapshot(store.resource(url), data, 'application/pdf')
+    assert counts()['local_edition'] == 1
+    assert counts()['by_sha'] == 0
+    export = BeautifulSoup(render_excerpts(markup(1), store, tmp_path), 'html.parser')
+    path, anchor = export.a['href'].split('#')
+    assert anchor == 'page=1' and (tmp_path/path).read_bytes() == data
+    assert export.a['data-source-url'] == url
+    unit.write_text(markup(2), 'utf8')
+    assert counts()['local_edition'] == 0
+    assert BeautifulSoup(render_excerpts(markup(2), store, tmp_path), 'html.parser').a['href'] == url
+    unit.write_text(markup(1), 'utf8')
+    store.object_path(sha).write_bytes(b'corrupt')
+    assert counts()['local_edition'] == 0
+    assert BeautifulSoup(render_excerpts(markup(1), store, tmp_path), 'html.parser').a['href'] == url
+
+
 def test_targeted_run_keeps_other_host_jobs_pending(tmp_path, monkeypatch):
     monkeypatch.setattr('atlas.network.validate_url', lambda *args: None)
     s = Store(tmp_path)
