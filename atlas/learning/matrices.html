@@ -12,7 +12,7 @@
 <div class="inline-video" data-title="Линейная алгебра ПМИ · лекция 1 за 2022/23"></div>
 <a class="watch-recording" href="https://www.youtube.com/watch?v=m3sgbykms3Y" target="_blank" rel="noopener">
 <span class="play-icon" aria-hidden="true">▶</span> Смотреть и слушать лекцию 1 на YouTube</a>
-<p>Можно слушать с начала или сразу перейти к математике на 24:55. Для раздела о транспонировании посмотрите, как преподаватель меняет местами строки и столбцы. После фрагмента об умножении попробуйте вычислить одну клетку произведения в примере ниже.</p>
+<p>Введение в курс занимает первые 24 минуты. Выберите тему, чтобы начать с нужного места.</p>
 <ul class="video-moments" aria-label="Моменты видеолекции">
 <li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=1495s" target="_blank" rel="noopener">24:55 · Переход к матрицам</a></li>
 <li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s" target="_blank" rel="noopener">45:00 · Векторы-столбцы</a></li>
@@ -24,18 +24,19 @@
 <nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a></nav>
 <section id="shape"><h2>Как читать матрицу</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Матрица и индексы · ПМИ 2023/24, лекция 1, с. 4–5</a>
 <!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
-<p><strong>Пример Атласа.</strong> Пусть две мастерские выпускают по три вида деталей. Каждая строка таблицы описывает мастерскую, каждый столбец — вид детали. Таблица чисел с фиксированным порядком строк и столбцов называется <b>матрицей</b>. У матрицы размера <i>m</i> × <i>n</i> имеется <i>m</i> строк и <i>n</i> столбцов.</p>
+<p><strong>Пример Атласа.</strong> В таблице <i>Q</i> строки обозначают две мастерские, столбцы — три вида деталей. Сколько деталей третьего вида выпустила вторая мастерская?</p>
 <div class="formula">
 <div class="formula-term"><span><i>Q</i> =</span><div class="matrix"><table aria-label="Выпуск деталей двух мастерских"><tbody><tr><td>2</td><td>0</td><td>1</td></tr><tr><td>3</td><td>1</td><td>4</td></tr></tbody></table></div></div>
 </div>
-<p>Запись <i>q</i><sub>23</sub> означает элемент во второй строке и третьем столбце. В примере он равен 4. Матрица размера 2 × 3 отличается от матрицы размера 3 × 2, даже если обе заполнены нулями. Две матрицы равны, когда у них одинаковый размер и все элементы на одинаковых местах совпадают.</p>
-<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Векторы-столбцы · ПМИ 2023/24, лекция 1, с. 8</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s">Слушать с 45:00</a>
+<p>На пересечении второй строки и третьего столбца стоит 4. Так читается запись <i>q</i><sub>23</sub>.</p>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Векторы-столбцы · ПМИ 2023/24, лекция 1, с. 8</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s">Смотреть объяснение с 45:00</a>
 <!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 8 22 28 338 146 | Пространство вещественных координат и их запись столбцом. --></aside>
-<p>Вектор из <i>n</i> вещественных координат будем записывать столбцом размера <i>n</i> × 1. Например, столбец цен трёх деталей содержит три строки. Запись ℝ<sup>n</sup> обозначает множество таких упорядоченных наборов.<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
+<div class="inline-video" data-title="Векторы-столбцы · лекция 1 ПМИ 2022/23"></div>
+<p>Вернитесь к таблице <i>Q</i>. Прочитайте её третий столбец сверху вниз. Какие две величины он объединяет?<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
 </section>
 <section id="addition"><h2>Сумма и умножение на число</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Сложение и умножение на скаляр · ПМИ 2023/24, лекция 1, с. 6</a>
 <!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 6 23 58 339 235 | Поэлементные формулы суммы матриц и произведения матрицы на число. --></aside>
-<p>Чтобы узнать выпуск за два дня, складываем числа для одной и той же мастерской и одного вида деталей. Формула для каждого места имеет вид (<i>A</i> + <i>D</i>)<sub>ij</sub> = <i>a</i><sub>ij</sub> + <i>d</i><sub>ij</sub>. Размеры должны совпадать. Если умножить матрицу на число λ, каждый её элемент умножится на λ. Вычитание означает прибавление матрицы с противоположными элементами.</p>
+<p><strong>Самопроверка Атласа.</strong> Примените формулы со слайда к правому нижнему элементу следующей суммы.</p>
 <div class="formula">
 <div class="matrix"><table aria-label="Первое слагаемое"><tbody><tr><td>1</td><td>2</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></div>
 <div class="formula-term"><span>+ 2</span><div class="matrix"><table aria-label="Матрица для умножения на два"><tbody><tr><td>0</td><td>3</td></tr><tr><td>2</td><td>1</td></tr></tbody></table></div></div>
@@ -46,27 +47,30 @@
 <!-- excerpt e8dbfa0e2468070f7ca923814349c69939b24e8b0ffa441b507c86cb3d053cb0 4 23 171 178 186 | Шестое свойство на слайде: распределительность относительно суммы двух матриц. --></aside>
 <p>Докажите для любой пары матриц одного размера, что <i>λ(A + D) = λA + λD</i>. Достаточно сравнить одну произвольную клетку.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
 <details><summary>Проверить доказательство</summary><p>В клетке <i>(i, j)</i> слева стоит <i>λ(aᵢⱼ + dᵢⱼ)</i>, справа — <i>λaᵢⱼ + λdᵢⱼ</i>. Распределительный закон для чисел даёт равенство в каждой клетке, а значит, и равенство матриц.</p></details></div>
-<p>Нулевая матрица того же размера оставляет сумму без изменения. Сложение с −<i>A</i> даёт нулевую матрицу. Множитель 1 сохраняет <i>A</i>, а последовательное умножение на два числа равносильно умножению на их произведение.</p>
 </section>
-<section id="transpose"><h2>Что меняется при транспонировании</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s">Транспонирование · ПМИ 2022/23, лекция 1, слушать с 54:16</a></aside>
-<p>У матрицы <i>A</i><sup>T</sup> строки и столбцы поменялись ролями. Первая строка <i>A</i> становится первым столбцом <i>A</i><sup>T</sup>. В общем виде (<i>A</i><sup>T</sup>)<sub>ij</sub> = <i>a</i><sub>ji</sub>. Размер <i>m</i> × <i>n</i> превращается в <i>n</i> × <i>m</i>.</p>
-<div class="formula">
-<div class="formula-term"><span><i>A</i> =</span><div class="matrix"><table aria-label="Матрица A, две строки и три столбца"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></div></div>
-<div class="formula-term"><span><i>A</i><sup>T</sup> =</span><div class="matrix"><table aria-label="Транспонированная матрица A"><tbody><tr><td>1</td><td>−1</td></tr><tr><td>2</td><td>0</td></tr><tr><td>0</td><td>3</td></tr></tbody></table></div></div>
-</div>
-<p>Число 2 перешло из позиции (1, 2) в позицию (2, 1). Второе транспонирование вернёт каждую клетку на прежнее место, поэтому (<i>A</i><sup>T</sup>)<sup>T</sup> = <i>A</i>. Транспонировать сумму можно по слагаемым: в клетке (i, j) обеих сторон равенства (<i>A</i> + <i>D</i>)<sup>T</sup> = <i>A</i><sup>T</sup> + <i>D</i><sup>T</sup> стоит <i>a</i><sub>ji</sub> + <i>d</i><sub>ji</sub>.<sup class="source-ref"><a href="#source-3" aria-label="Источник 3">[3]</a></sup></p>
+<section id="transpose"><h2>Транспонирование матрицы</h2>
+<aside class="primary-source"><span>Роман Авдеев · ПМИ 2022/23 · лекция 1</span>
+<p><a class="clip-start" href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s">▶ Смотреть объяснение с 54:16</a></p>
+<a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3479s">57:59 · Свойства</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3745s">1:02:25 · Числовой пример</a>
+</aside>
+<div class="inline-video" data-title="Транспонирование · лекция 1 ПМИ 2022/23" data-end="3795"></div>
+<p>Когда преподаватель выпишет матрицу из чисел от 1 до 6, поставьте запись на паузу. Запишите первую строку ответа. Сверьтесь с тем же примером на доске предыдущего года.<sup class="source-ref"><a href="#source-3" aria-label="Источник 3">[3]</a></sup></p>
+<aside class="primary-source"><span>Доска преподавателя · ПМИ 2021/22 · лекция 1</span> <a href="https://drive.google.com/file/d/11XxXAh-z1DW-3tcx0lTVpx7MyiHx6Zw7/view">Транспонирование матрицы размера 3 × 2, пример 2</a>
+<!-- excerpt board 948053a5f0485a87d681ce9c974d7ddfb189f9b0d712afbe5d48e40c6e5c5c25 1 1082 85 1312 171 | Строки исходной матрицы (1, 2), (3, 4), (5, 6). На доске первая строка результата — 1, 3, 5, вторая — 2, 4, 6. --></aside>
 </section>
 <section id="product"><h2>Как работает произведение матриц</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Умножение матриц · ПМИ 2023/24, лекция 2, с. 1</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s">Слушать с 1:07:07 · 2022/23</a>
 <!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 1 23 54 236 89 | Размеры A, B и AB. Элемент c с индексами i, j записан как произведение строки A и столбца B. --></aside>
-<p>На слайде <i>A</i><sub>(i)</sub> означает строку <i>i</i>, а <i>B</i><sup>(j)</sup> — столбец <i>j</i>. В них по <i>n</i> чисел. Перемножьте их попарно и сложите произведения. Получится одно число — элемент <i>c</i><sub>ij</sub>. Каждая из <i>m</i> строк встречается с каждым из <i>p</i> столбцов, поэтому размер результата равен <i>m</i> × <i>p</i>.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
-<p><strong>Пример Атласа.</strong> Мастерская выпустила 2, 0 и 1 деталь трёх видов по цене 3, 5 и 7 рублей. Строка количеств, умноженная на столбец цен, даёт общую стоимость: 2 · 3 + 0 · 5 + 1 · 7 = 13 рублей. В таблице ниже тем же способом можно вычислить любую клетку.</p>
-<div class="example"><p><b>Выберите клетку результата.</b> Подсветка показывает, какие строка и столбец участвуют в расчёте.</p>
+<div class="inline-video" data-title="Произведение матриц · лекция 1 ПМИ 2022/23"></div>
+<p>На слайде <i>A</i><sub>(i)</sub> обозначает строку, <i>B</i><sup>(j)</sup> — столбец. Проследите, как преподаватель использует эти обозначения в числовом примере.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
+<aside class="primary-source"><span>Доска преподавателя · ПМИ 2021/22 · лекция 1</span> <a href="https://drive.google.com/file/d/11XxXAh-z1DW-3tcx0lTVpx7MyiHx6Zw7/view">Умножение матриц, пример 1</a>
+<!-- excerpt board 948053a5f0485a87d681ce9c974d7ddfb189f9b0d712afbe5d48e40c6e5c5c25 1 1091 641 1498 757 | На доске разобраны четыре поэлементных расчёта. Строки произведения — (4, 1) и (3, −2). --></aside>
+<div class="example"><p><b>Проверьте расчёт с доски.</b> Выберите клетку результата, чтобы подсветить её строку и столбец.</p>
 <div class="formula">
-<div class="matrix"><table aria-label="Первый множитель A" id="left"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></div>
-<div class="formula-term"><span>×</span><div class="matrix"><table aria-label="Второй множитель B" id="right"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr><tr><td>4</td><td>2</td></tr></tbody></table></div></div>
-<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Выберите элемент произведения" id="result"><tbody><tr><td><button aria-label="Строка 1, столбец 1, значение 4" aria-pressed="true" data-col="0" data-row="0" type="button">4</button></td><td><button aria-label="Строка 1, столбец 2, значение −1" aria-pressed="false" data-col="1" data-row="0" type="button">−1</button></td></tr><tr><td><button aria-label="Строка 2, столбец 1, значение 10" aria-pressed="false" data-col="0" data-row="1" type="button">10</button></td><td><button aria-label="Строка 2, столбец 2, значение 5" aria-pressed="false" data-col="1" data-row="1" type="button">5</button></td></tr></tbody></table></div></div>
+<div class="matrix"><table aria-label="Первый множитель A" id="left"><tbody><tr><td>1</td><td>0</td><td>2</td></tr><tr><td>0</td><td>−1</td><td>3</td></tr></tbody></table></div>
+<div class="formula-term"><span>×</span><div class="matrix"><table aria-label="Второй множитель B" id="right"><tbody><tr><td>2</td><td>−1</td></tr><tr><td>0</td><td>5</td></tr><tr><td>1</td><td>1</td></tr></tbody></table></div></div>
+<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Выберите элемент произведения" id="result"><tbody><tr><td><button aria-label="Строка 1, столбец 1, значение 4" aria-pressed="true" data-col="0" data-row="0" type="button">4</button></td><td><button aria-label="Строка 1, столбец 2, значение 1" aria-pressed="false" data-col="1" data-row="0" type="button">1</button></td></tr><tr><td><button aria-label="Строка 2, столбец 1, значение 3" aria-pressed="false" data-col="0" data-row="1" type="button">3</button></td><td><button aria-label="Строка 2, столбец 2, значение −2" aria-pressed="false" data-col="1" data-row="1" type="button">−2</button></td></tr></tbody></table></div></div>
 </div>
-<p id="calculation" aria-live="polite">c₁₁ = 1 · 2 + 2 · 1 + 0 · 4 = 4</p><noscript><p>Например, c₂₁ = (−1) · 2 + 0 · 1 + 3 · 4 = 10. Кнопки подсветки работают при включённом JavaScript.</p></noscript></div>
+<p id="calculation" aria-live="polite">c₁₁ = 1 · 2 + 0 · 0 + 2 · 1 = 4</p><noscript><p>Например, c₂₁ = 0 · 2 + (−1) · 0 + 3 · 1 = 3. Кнопки подсветки работают при включённом JavaScript.</p></noscript></div>
 <p>В этом примере <i>AB</i> имеет размер 2 × 2, а <i>BA</i> — 3 × 3. Уже размеры исключают равенство. Бывает, что обратный порядок вообще невозможен. Перед вычислением всегда подпишите размеры обоих множителей.</p>
 <h3 id="matrix-system">Переход к системам уравнений</h3>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Матричная запись системы · ПМИ 2023/24, лекция 2, с. 5</a>
@@ -120,7 +124,7 @@
 <li id="source-4" tabindex="-1">Произведение и запись системы. Лекция 2, с. 1–2 и 5 в версиях <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">2023/24</a> и <a href="https://drive.google.com/file/d/1Efps_cW1X_EwppShLnqU5hucz4zf1eDC/view">2024/25</a>.</li>
 <li id="source-5" tabindex="-1">Определение коммутатора и задача на обмен аргументов — <a href="https://www.dropbox.com/s/cj358c0590pa3y3/LA_19-20_Sheet1.pdf?dl=0">ПМИ 2019/20, листок 1, с. 1, задача 1(1)</a>.</li>
 </ol>
-<p>Мастерские, числовые примеры и разборы решений подготовлены для Атласа. Нумерация тем в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2017/2018_%28основной_поток%29">плане 2017/18</a> и <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане 2025/26</a> различается. <a href="years.html">Материалы по годам</a>.</p></details></footer>
+<p>Матрица мастерских, числовые упражнения самопроверки и их решения подготовлены для Атласа. Примеры транспонирования и произведения взяты с доски ПМИ 2021/22. Нумерация тем в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2017/2018_%28основной_поток%29">плане 2017/18</a> и <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане 2025/26</a> различается. <a href="years.html">Материалы по годам</a>.</p></details></footer>
 <nav class="course-nav bottom" aria-label="После урока 1"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Следующий урок → Урок 2. Метод Гаусса и общее решение</a></nav>
 </main><script>
 const left = document.querySelector('#left');

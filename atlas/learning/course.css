@@ -33,6 +33,7 @@ li{margin:.45em 0}
 sub,sup{line-height:0}
 section{scroll-margin:12px}
 @media(max-width:500px){main{padding:16px 14px}
+h2{font-size:clamp(1.55rem,7vw,1.85rem)}
 .formula{gap:.25em}
 }
 @media print{nav{display:none}
@@ -53,6 +54,8 @@ h2,h3{break-after:avoid}
 .recording-meta{font-size:.93rem;color:#374e54}
 .watch-recording{display:inline-block;padding:.55em .9em;border-radius:5px;font-weight:650}
 .watch-recording{background:#145962;color:white;text-decoration:none}
+.inline-video button.watch-recording{font:inherit;font-weight:650;cursor:pointer;border:0;margin:.4em 0}
+.clip-start{font-weight:650}
 .watch-recording:hover{background:#10474e}
 .play-icon{margin-right:.3em}
 .video-moments{display:flex;flex-wrap:wrap;gap:.3rem 1.3rem;padding:0;list-style:none;font-size:.94rem}

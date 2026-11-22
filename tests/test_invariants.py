@@ -440,6 +440,20 @@ def test_course_entry_and_stream_headings(s, tmp_path):
         assert video.select_one('.inline-video[data-title]')
         assert [parse_qs(urlsplit(a['href']).query) for a in video.select('.video-moments a')] == [
             {'v':[video_id], 't':[str(n)+'s']} for n in seconds]
+    clip = unit.select_one('#transpose .inline-video')
+    assert clip['data-end'] == '3795'
+    assert [parse_qs(urlsplit(a['href']).query).get('t') for a in
+            unit.select('#transpose .primary-source a[href*="youtube.com"]')] == [
+                ['3256s'], ['3479s'], ['3745s']]
+    assert unit.select_one('#transpose a.clip-start')
+    assert unit.select_one('#transpose a[href*="11XxXAh-z1DW"]')
+    assert unit.select_one('#product a[href*="11XxXAh-z1DW"]')
+    def values(selector):
+        return [[int(c.get_text().replace('−', '-')) for c in r.select('td')]
+                for r in unit.select(selector + ' tr')]
+    left, right = values('#left'), values('#right')
+    products = [[sum(a*b for a, b in zip(row, col)) for col in zip(*right)] for row in left]
+    assert products == values('#result') == [[4, 1], [3, -2]]
     assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
     assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
