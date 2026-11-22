@@ -604,6 +604,8 @@ def test_seminar_archive_keeps_video_identity_and_document_fallbacks(s, tmp_path
         for link in page.select('.seminar-watch'):
             assert parse_qs(urlsplit(link['href']).query)['v'][0] in ids
         if number in CHECKED:
+            vid = CHECKED[number][0]
+            assert archive.select_one(f'#v-{vid} a[href="seminar-213-{number}.html"]')
             assert f't={CHECKED[number][3]}s' in page.select('.seminar-watch')[-1]['href']
     for group, source in curated['handouts'].items():
         for number, file_id, sha in source['files']:
@@ -615,7 +617,12 @@ def test_seminar_archive_keeps_video_identity_and_document_fallbacks(s, tmp_path
             continue
         lesson = BeautifulSoup(file.read_text('utf8'), 'html.parser')
         if lesson.select_one('.lecture-video'):
-            timed, start = lesson.select('#seminar .seminar-watch')
-            link = parse_qs(urlsplit(timed['href']).query)
-            assert link['v'][0] in ids and link['t'][0].endswith('s')
-            assert parse_qs(urlsplit(start['href']).query) == {'v': link['v']}
+            for item in lesson.select('.seminar-item'):
+                for link in item.select('a.seminar-watch'):
+                    assert parse_qs(urlsplit(link['href']).query)['v'][0] in ids
+            *markers, start = lesson.select('#seminar .seminar-watch')
+            full_recording = parse_qs(urlsplit(start['href']).query)
+            assert markers and set(full_recording) == {'v'}
+            for marker in markers:
+                link = parse_qs(urlsplit(marker['href']).query)
+                assert link['v'] == full_recording['v'] and link['t'][0][:-1].isdigit() and link['t'][0].endswith('s')

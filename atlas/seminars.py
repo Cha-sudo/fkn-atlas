@@ -18,6 +18,7 @@ CHECKED = {
     "1": ("5U16wnINxgU", "6 сентября 2021", "26:40", 1600, "Согласование размеров при умножении матриц"),
     "2": ("m4ldEAXsx60", "13 сентября 2021", "15:50", 950, "Матрицы, коммутирующие с диагональной"),
     "3": ("AStD0u_Rhpc", "20 сентября 2021", "38:20", 2300, "Преобразования системы в методе Гаусса"),
+    "4": ("8_fTfv3jVYU", "27 сентября 2021", "37:30", 2250, "Матричное уравнение при нильпотентной A"),
 }
 DOCUMENT_LABELS = {"problems": "Задачи", "algorithms": "Алгоритмы", "additional": "Дополнение",
                    "seminar": "Разбор семинара"}
@@ -106,6 +107,8 @@ def write_seminars(store, destination, page_images):
     for year in years:
         nav.append(f'<a href="#year-{year}">{year}/{str(int(year) + 1)[2:]}</a>')
     parts.append('<nav aria-label="Годы и материалы">' + ''.join(nav) + '</nav>')
+    companions = {value[0]: (f'seminar-213-{number}.html', value[4]) for number, value in CHECKED.items()}
+    companions["pTzD67Gs3bU"] = ('matrix-equations.html#seminar', 'Три системы с одной матрицей')
     for year, info in years.items():
         parts.append(f'<section id="year-{year}"><h2>{year}/{str(int(year) + 1)[2:]}</h2>'
                      f'<p><a href="{escape(info["source"], quote=True)}">Группы в программе курса</a></p>')
@@ -115,7 +118,11 @@ def write_seminars(store, destination, page_images):
             parts.append(f'<h3 id="group-{group}">БПМИ{group} · записей {len(records)}</h3><ul class="seminar-list">')
             for label, vid in records:
                 title = f'Семинар {label}' if label.isdecimal() else label
-                parts.append(f'<li id="v-{vid}" class="seminar-item">{video_link(vid, title)}</li>')
+                parts.append(f'<li id="v-{vid}" class="seminar-item">{video_link(vid, title)}')
+                if vid in companions:
+                    path, topic = companions[vid]
+                    parts.append(f' · <a href="{path}">{escape(topic)}</a>')
+                parts.append('</li>')
             parts.append('</ul>')
         parts.append('</section>')
     parts.append(write_documents(store, destination, page_images, data))
