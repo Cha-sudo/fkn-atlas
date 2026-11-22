@@ -4,14 +4,15 @@
 <link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head><body><main>
 <header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 1. Матрицы и первые операции</h1>
-<nav class="course-nav" aria-label="Навигация по курсу"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Далее → Урок 2. Метод Гаусса и общее решение</a></nav>
-<p>После раздела вы сможете прочитать матрицу, выполнить операции с ней и записать два линейных уравнения одним матричным равенством. Для начала достаточно уметь складывать и умножать числа со знаком.</p></header>
+<nav class="course-nav" aria-label="Навигация по курсу"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="products-and-systems.html">Далее → Урок 2. Свойства произведения и системы уравнений</a></nav>
+<p>После раздела вы сможете прочитать матрицу, транспонировать её и вычислить произведение двух матриц. Для начала достаточно уметь складывать и умножать числа со знаком.</p></header>
 <section id="video" class="lecture-video" aria-labelledby="video-heading">
 <h2 id="video-heading">Видеолекция</h2>
 <p class="recording-meta">Роман Авдеев · ПМИ, основной поток · 5 сентября 2022 · 1 ч 26 мин</p>
 <div class="inline-video" data-title="Линейная алгебра ПМИ · лекция 1 за 2022/23"></div>
 <a class="watch-recording" href="https://www.youtube.com/watch?v=m3sgbykms3Y" target="_blank" rel="noopener">
 <span class="play-icon" aria-hidden="true">▶</span> Смотреть и слушать лекцию 1 на YouTube</a>
+<p><a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Слайды к этой лекции · 8 страниц</a></p>
 <p>Введение в курс занимает первые 24 минуты. Выберите тему, чтобы начать с нужного места.</p>
 <ul class="video-moments" aria-label="Моменты видеолекции">
 <li><a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=1495s" target="_blank" rel="noopener">24:55 · Переход к матрицам</a></li>
@@ -22,20 +23,20 @@
 <p class="refs">Для просмотра нужен интернет. <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29" target="_blank" rel="noopener">Страница курса с записью</a> · <a href="https://www.youtube.com/watch?v=TraSEKLgUnw" target="_blank" rel="noopener">Запись той же темы за 2021/22</a>.</p>
 </section>
 <nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a></nav>
-<section id="shape"><h2>Как читать матрицу</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Матрица и индексы · ПМИ 2023/24, лекция 1, с. 4–5</a>
-<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
+<section id="shape"><h2>Как читать матрицу</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Матрица и индексы · ПМИ 2022/23, лекция 1, с. 4–5</a>
+<!-- excerpt 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
 <p><strong>Пример Атласа.</strong> В таблице <i>Q</i> строки обозначают две мастерские, столбцы — три вида деталей. Сколько деталей третьего вида выпустила вторая мастерская?</p>
 <div class="formula">
 <div class="formula-term"><span><i>Q</i> =</span><div class="matrix"><table aria-label="Выпуск деталей двух мастерских"><tbody><tr><td>2</td><td>0</td><td>1</td></tr><tr><td>3</td><td>1</td><td>4</td></tr></tbody></table></div></div>
 </div>
 <p>На пересечении второй строки и третьего столбца стоит 4. Так читается запись <i>q</i><sub>23</sub>.</p>
-<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Векторы-столбцы · ПМИ 2023/24, лекция 1, с. 8</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s">Смотреть объяснение с 45:00</a>
-<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 8 22 28 338 146 | Пространство вещественных координат и их запись столбцом. --></aside>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Векторы-столбцы · ПМИ 2022/23, лекция 1, с. 8</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s">Смотреть объяснение с 45:00</a>
+<!-- excerpt 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 8 22 28 338 146 | Пространство вещественных координат и их запись столбцом. --></aside>
 <div class="inline-video" data-title="Векторы-столбцы · лекция 1 ПМИ 2022/23"></div>
 <p>Вернитесь к таблице <i>Q</i>. Прочитайте её третий столбец сверху вниз. Какие две величины он объединяет?<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
 </section>
-<section id="addition"><h2>Сумма и умножение на число</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Сложение и умножение на скаляр · ПМИ 2023/24, лекция 1, с. 6</a>
-<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 6 23 58 339 235 | Поэлементные формулы суммы матриц и произведения матрицы на число. --></aside>
+<section id="addition"><h2>Сумма и умножение на число</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Сложение и умножение на скаляр · ПМИ 2022/23, лекция 1, с. 6</a>
+<!-- excerpt 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 6 23 58 339 235 | Поэлементные формулы суммы матриц и произведения матрицы на число. --></aside>
 <p><strong>Самопроверка Атласа.</strong> Примените формулы со слайда к правому нижнему элементу следующей суммы.</p>
 <div class="formula">
 <div class="matrix"><table aria-label="Первое слагаемое"><tbody><tr><td>1</td><td>2</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></div>
@@ -43,8 +44,8 @@
 <div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Результат сложения"><tbody><tr><td>1</td><td>8</td></tr><tr><td>4</td><td>1</td></tr></tbody></table></div></div>
 </div>
 <p>Справа внизу получается −1 + 2 · 1 = 1.</p>
-<div id="entrywise-proof"><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.dropbox.com/s/ttoti50j3etdyi7/Lec01_2020-09-07.pdf?dl=0">Распределительный закон, свойство 6 · ПМИ 2020/21, лекция 1, с. 4</a>
-<!-- excerpt e8dbfa0e2468070f7ca923814349c69939b24e8b0ffa441b507c86cb3d053cb0 4 23 171 178 186 | Шестое свойство на слайде: распределительность относительно суммы двух матриц. --></aside>
+<div id="entrywise-proof"><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Распределительный закон, свойство 6 · ПМИ 2022/23, лекция 1, с. 7</a>
+<!-- excerpt 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 7 23 156 239 225 | Свойства операций с матрицами и упражнение на их доказательство. В пункте 6 дан распределительный закон. --></aside>
 <p>Докажите для любой пары матриц одного размера, что <i>λ(A + D) = λA + λD</i>. Достаточно сравнить одну произвольную клетку.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
 <details><summary>Проверить доказательство</summary><p>В клетке <i>(i, j)</i> слева стоит <i>λ(aᵢⱼ + dᵢⱼ)</i>, справа — <i>λaᵢⱼ + λdᵢⱼ</i>. Распределительный закон для чисел даёт равенство в каждой клетке, а значит, и равенство матриц.</p></details></div>
 </section>
@@ -58,10 +59,9 @@
 <aside class="primary-source"><span>Доска преподавателя · ПМИ 2021/22 · лекция 1</span> <a href="https://drive.google.com/file/d/11XxXAh-z1DW-3tcx0lTVpx7MyiHx6Zw7/view">Транспонирование матрицы размера 3 × 2, пример 2</a>
 <!-- excerpt board 948053a5f0485a87d681ce9c974d7ddfb189f9b0d712afbe5d48e40c6e5c5c25 1 1082 85 1312 171 | Строки исходной матрицы (1, 2), (3, 4), (5, 6). На доске первая строка результата — 1, 3, 5, вторая — 2, 4, 6. --></aside>
 </section>
-<section id="product"><h2>Как работает произведение матриц</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Умножение матриц · ПМИ 2023/24, лекция 2, с. 1</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s">Слушать с 1:07:07 · 2022/23</a>
-<!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 1 23 54 236 89 | Размеры A, B и AB. Элемент c с индексами i, j записан как произведение строки A и столбца B. --></aside>
+<section id="product"><h2>Как работает произведение матриц</h2><aside class="primary-source"><span>Роман Авдеев · ПМИ 2022/23 · лекция 1</span> <a class="clip-start" href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s">▶ Умножение строки на столбец · смотреть с 1:07:07</a></aside>
 <div class="inline-video" data-title="Произведение матриц · лекция 1 ПМИ 2022/23"></div>
-<p>На слайде <i>A</i><sub>(i)</sub> обозначает строку, <i>B</i><sup>(j)</sup> — столбец. Проследите, как преподаватель использует эти обозначения в числовом примере.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
+<p>Выберите одну строку и один столбец на доске. Вычислите их произведение, затем проверьте себя в таблице.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
 <aside class="primary-source"><span>Доска преподавателя · ПМИ 2021/22 · лекция 1</span> <a href="https://drive.google.com/file/d/11XxXAh-z1DW-3tcx0lTVpx7MyiHx6Zw7/view">Умножение матриц, пример 1</a>
 <!-- excerpt board 948053a5f0485a87d681ce9c974d7ddfb189f9b0d712afbe5d48e40c6e5c5c25 1 1091 641 1498 757 | На доске разобраны четыре поэлементных расчёта. Строки произведения — (4, 1) и (3, −2). --></aside>
 <div class="example"><p><b>Проверьте расчёт с доски.</b> Выберите клетку результата, чтобы подсветить её строку и столбец.</p>
@@ -72,23 +72,9 @@
 </div>
 <p id="calculation" aria-live="polite">c₁₁ = 1 · 2 + 0 · 0 + 2 · 1 = 4</p><noscript><p>Например, c₂₁ = 0 · 2 + (−1) · 0 + 3 · 1 = 3. Кнопки подсветки работают при включённом JavaScript.</p></noscript></div>
 <p>В этом примере <i>AB</i> имеет размер 2 × 2, а <i>BA</i> — 3 × 3. Уже размеры исключают равенство. Бывает, что обратный порядок вообще невозможен. Перед вычислением всегда подпишите размеры обоих множителей.</p>
-<h3 id="matrix-system">Переход к системам уравнений</h3>
-<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Матричная запись системы · ПМИ 2023/24, лекция 2, с. 5</a>
-<!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 5 23 45 322 222 | Матрица коэффициентов A, столбцы b и x и итоговое равенство Ax = b. --></aside>
-<p><strong>Пример Атласа.</strong> Запишем два уравнения одним матричным равенством.</p>
-<div class="formula">
-<div class="matrix"><table aria-label="Коэффициенты системы"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></tbody></table></div>
-<div class="formula-term"><span>·</span><div class="matrix"><table aria-label="Неизвестные x и y"><tbody><tr><td>x</td></tr><tr><td>y</td></tr></tbody></table></div></div>
-<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Столбец правых частей"><tbody><tr><td>5</td></tr><tr><td>1</td></tr></tbody></table></div></div>
-</div>
-<p>Прочитайте равенство по строкам.</p>
-<ul>
-<li>Первая строка даёт <i>2x + y = 5</i>.</li>
-<li>Вторая строка даёт <i>x − y = 1</i>.</li>
-</ul>
-<p>Подставим <i>x = 2</i> и <i>y = 1</i>. Получаем <i>2 · 2 + 1 = 5</i> и <i>2 − 1 = 1</i>. Оба уравнения выполнены.</p>
+<p id="matrix-system"><a href="products-and-systems.html#matrix-system">Матричная запись системы · перейти к лекции 2</a></p>
 </section>
-<section id="check"><h2>Проверьте себя</h2><p>Числовые упражнения и решения составлены для Атласа. В задаче 4 вы примените тождество из листка ПМИ. Сначала запишите ответ на бумаге. Затем раскройте решение и сравните ход вычислений.</p>
+<section id="check"><h2>Проверьте себя</h2><p>Числовые упражнения и решения составлены для Атласа. Задача 4 — дополнительная практика по листку ПМИ. Сначала запишите ответ на бумаге. Затем раскройте решение и сравните ход вычислений.</p>
 <ol><li>Для матрицы <i>Q</i> из начала урока найдите <i>q</i><sub>12</sub> и (<i>Q</i><sup>T</sup>)<sub>32</sub>. Можно ли сложить <i>Q</i> с <i>Q</i><sup>T</sup>?
 <details><summary>Проверить индексы</summary><p>В первой строке и втором столбце <i>Q</i> стоит 0. Второй искомый элемент равен <i>q</i><sub>23</sub> = 4. У слагаемых размеры 2 × 3 и 3 × 2, поэтому сумма не определена.</p></details></li>
 <li>Найдите 2<i>U</i> − <i>V</i> для этих матриц и объясните знак в нижней правой клетке.
@@ -102,30 +88,26 @@
 <p>Справа внизу 2 · 0 − (−1) = 1.</p></details></li>
 <li>Пусть <i>P</i> имеет размер 2 × 3, а <i>R</i> — 3 × 4. Какие из произведений <i>PR</i> и <i>RP</i> существуют? Сколько пар чисел нужно перемножить, чтобы вычислить одну клетку <i>PR</i>?
 <details><summary>Проверить размеры</summary><p><i>PR</i> имеет размер 2 × 4. В одной клетке суммируются три произведения. Для <i>RP</i> внутренние размеры 4 и 2 различны.</p></details></li>
-<li id="commutator"><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.dropbox.com/s/cj358c0590pa3y3/LA_19-20_Sheet1.pdf?dl=0">Антикоммутативность · ПМИ 2019/20, листок 1, с. 1, задача 1(1)</a>
-<!-- excerpt 1bde56e2f1cc6faad467a4ad7696c2b53d3bbdec08adaea383876df611b3fca8 1 45 216 458 242 | Условие задачи 1 и тождество первого пункта о перестановке аргументов. --></aside>
+<li id="commutator"><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/145lCF04b1nYcEfItVeaqGnMjj7vB6ySq/view">Антикоммутативность · ПМИ 2022/23, листок 1, с. 1, задача 1(1)</a>
+<!-- excerpt c327da124fcd765c990867d725c1cf987e814eca2e16eb6276e6258a0ca71f04 1 45 216 458 242 | Условие задачи 1 и тождество первого пункта о перестановке аргументов. --></aside>
 Вычислите <i>UV</i> и <i>VU</i> для матриц из задачи 2. Их разность <i>[U,V] = UV − VU</i> называется коммутатором. Докажите тождество из листка при обмене <i>U</i> и <i>V</i>.<sup class="source-ref"><a href="#source-5" aria-label="Источник 5">[5]</a></sup>
 <details><summary>Проверить произведения</summary><div class="formula">
 <div class="formula-term"><span><i>UV</i> =</span><div class="matrix"><table aria-label="Произведение UV"><tbody><tr><td>2</td><td>3</td></tr><tr><td>6</td><td>3</td></tr></tbody></table></div></div>
 <div class="formula-term"><span><i>VU</i> =</span><div class="matrix"><table aria-label="Произведение VU"><tbody><tr><td>5</td><td>−4</td></tr><tr><td>−3</td><td>0</td></tr></tbody></table></div></div>
 </div>
 <p>Например, слева вверху для <i>VU</i> получается 2 · 1 + 1 · 3 = 5. Вычтем результаты по клеткам. У <i>[U,V]</i> первая строка (−3, 7), вторая (9, 3). При обмене множителей у каждой клетки меняется знак, поскольку <i>[V,U] = VU − UV = −[U,V]</i>. Последнее равенство верно для любых двух квадратных матриц одного размера.</p></details></li>
-<li>Составьте <i>Ax</i> = <i>b</i> для системы <i>u</i> − 2<i>v</i> = 1, 3<i>u</i> + <i>v</i> = 10. Подстановкой проверьте пару (3, 1).
-<details><summary>Проверить запись системы</summary><div class="formula">
-<div class="formula-term"><span><i>A</i> =</span><div class="matrix"><table aria-label="Матрица коэффициентов"><tbody><tr><td>1</td><td>−2</td></tr><tr><td>3</td><td>1</td></tr></tbody></table></div></div>
-</div>
-<p>Столбцы неизвестных и правых частей — (<i>u</i>, <i>v</i>)<sup>T</sup> и (1, 10)<sup>T</sup>. Подстановка даёт 3 − 2 = 1 и 9 + 1 = 10.</p></details></li></ol>
-<p><b>Готовность к следующей теме.</b> Если вы можете выбрать операцию, обосновать её допустимость и проверить уравнения подстановкой, у вас есть основа для изучения преобразований строк. При ошибке в индексах вернитесь к транспонированию, при поклеточном умножении — к примеру со строкой и столбцом.</p></section>
+</ol>
+</section>
 <footer><details class="lesson-sources"><summary>Источники урока</summary>
 <ol>
-<li id="source-1" tabindex="-1">Размер, индексы и векторы-столбцы. Лекция 1, с. 4–5 и 8 в версиях <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">2023/24</a> и <a href="https://drive.google.com/file/d/1W0E8F252bg2-2t40sGnUrqq6is5oemfg/view">2024/25</a>.</li>
-<li id="source-2" tabindex="-1">Упражнение на доказательство свойств и переход к столбцам — <a href="https://www.dropbox.com/s/ttoti50j3etdyi7/Lec01_2020-09-07.pdf?dl=0">лекция 1 за 2020/21, с. 4–5</a>. Те же свойства перечислены на с. 6–7 лекции 1 за 2023/24 и 2024/25 (примечание 1).</li>
+<li id="source-1" tabindex="-1">Основная презентация — <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">лекция 1 за 2022/23, с. 4–8</a>.</li>
+<li id="source-2" tabindex="-1">Распределительность и упражнение — <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">с. 7 лекции 1 за 2022/23</a>. Архивная версия — <a href="https://www.dropbox.com/s/ttoti50j3etdyi7/Lec01_2020-09-07.pdf?dl=0">с. 4 за 2020/21</a>.</li>
 <li id="source-3" tabindex="-1">Транспонирование — <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s">устное объяснение, 54:16</a>. Тема также есть в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане 2025/26</a>.</li>
-<li id="source-4" tabindex="-1">Произведение и запись системы. Лекция 2, с. 1–2 и 5 в версиях <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">2023/24</a> и <a href="https://drive.google.com/file/d/1Efps_cW1X_EwppShLnqU5hucz4zf1eDC/view">2024/25</a>.</li>
-<li id="source-5" tabindex="-1">Определение коммутатора и задача на обмен аргументов — <a href="https://www.dropbox.com/s/cj358c0590pa3y3/LA_19-20_Sheet1.pdf?dl=0">ПМИ 2019/20, листок 1, с. 1, задача 1(1)</a>.</li>
+<li id="source-4" tabindex="-1">Произведение — <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s">лекция 1 за 2022/23</a>. Числа в интерактивном расчёте — с доски 2021/22.</li>
+<li id="source-5" tabindex="-1">Основной листок — <a href="https://drive.google.com/file/d/145lCF04b1nYcEfItVeaqGnMjj7vB6ySq/view">2022/23, задача 1(1)</a>. Тот же пункт в архиве — <a href="https://www.dropbox.com/s/cj358c0590pa3y3/LA_19-20_Sheet1.pdf?dl=0">ПМИ 2019/20, листок 1, с. 1, задача 1(1)</a>.</li>
 </ol>
 <p>Матрица мастерских, числовые упражнения самопроверки и их решения подготовлены для Атласа. Примеры транспонирования и произведения взяты с доски ПМИ 2021/22. Нумерация тем в <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2017/2018_%28основной_поток%29">плане 2017/18</a> и <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2025/2026_%28основной_поток%29">плане 2025/26</a> различается. <a href="years.html">Материалы по годам</a>.</p></details></footer>
-<nav class="course-nav bottom" aria-label="После урока 1"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Следующий урок → Урок 2. Метод Гаусса и общее решение</a></nav>
+<nav class="course-nav bottom" aria-label="После урока 1"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="products-and-systems.html">Следующий урок → Урок 2. Свойства произведения и системы уравнений</a></nav>
 </main><script>
 const left = document.querySelector('#left');
 const right = document.querySelector('#right');

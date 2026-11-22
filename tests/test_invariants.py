@@ -392,31 +392,28 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert matrices and len(matrices) == len(unit.select('main table'))
     assert all(m.name == 'div' and m.select_one(':scope > table') for m in matrices)
     assert all(m.find_parent(class_='formula') and not m.find_parent('p') for m in matrices)
-    assert len(unit.select('#check li details')) == 5
+    assert len(unit.select('#check li details')) == 4
     course_dir = (tmp_path/path).parent
     assert (course_dir/unit.select_one('link[rel=stylesheet]')['href']).is_file()
-    next_links = unit.select('a[rel=next]')
-    assert len(next_links) == 2 and len({a['href'] for a in next_links}) == 1
-    second = BeautifulSoup((course_dir/next_links[0]['href']).read_text('utf8'), 'html.parser')
-    assert second.h1.get_text() == 'Урок 2. Метод Гаусса и общее решение'
-    assert [a['href'] for a in second.select('a[rel=next]')] == ['homogeneous.html'] * 2
-    third = BeautifulSoup((course_dir/'homogeneous.html').read_text('utf8'), 'html.parser')
-    assert third.h1.get_text() == 'Урок 3. Однородные системы'
-    assert [a['href'] for a in third.select('a[rel=prev]')] == ['gauss.html'] * 2
-    assert len(third.select('#check li details')) == 3
-    assert [a['href'] for a in third.select('a[rel=next]')] == ['elementary.html'] * 2
-    fourth = BeautifulSoup((course_dir/'elementary.html').read_text('utf8'), 'html.parser')
-    assert fourth.h1.get_text() == 'Урок 4. Элементарные матрицы'
-    assert [a['href'] for a in fourth.select('a[rel=prev]')] == ['homogeneous.html'] * 2
-    assert len(fourth.select('#check li details')) == 3
-    assert [a['href'] for a in fourth.select('a[rel=next]')] == ['matrix-equations.html'] * 2
-    fifth = BeautifulSoup((course_dir/'matrix-equations.html').read_text('utf8'), 'html.parser')
-    assert fifth.h1.get_text() == 'Урок 5. Матричные уравнения'
-    assert [a['href'] for a in fifth.select('a[rel=prev]')] == ['elementary.html'] * 2
-    assert len(fifth.select('#check li > details')) == 3
+    files = ['matrices.html', 'products-and-systems.html', 'gauss.html', 'homogeneous.html',
+             'elementary.html', 'matrix-equations.html']
+    titles = ['Матрицы и первые операции', 'Свойства произведения и системы уравнений',
+              'Метод Гаусса и общее решение', 'Однородные системы',
+              'Элементарные матрицы', 'Матричные уравнения']
+    lessons = [BeautifulSoup((course_dir/name).read_text('utf8'), 'html.parser') for name in files]
+    for index, doc in enumerate(lessons):
+        assert doc.h1.get_text() == f'Урок {index + 1}. {titles[index]}'
+        assert [a['href'] for a in doc.select('a[rel=prev]')] == files[max(index-1, 0):index] * 2
+        assert [a['href'] for a in doc.select('a[rel=next]')] == files[index+1:index+2] * 2
+        assert len(doc.select('#check li > details')) == (4 if index == 0 else 3)
+    _, systems, gauss, homogeneous, elementary, equations = lessons
+    assert systems.select_one('#video a[href*="1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe"]')
+    assert unit.select_one('#video a[href*="12TC_aols6gzchKDBK4cvNT5GqCaNpIG1"]')
+    assert unit.select_one('#matrix-system a')['href'] == 'products-and-systems.html#matrix-system'
+    assert systems.select_one('section#matrix-system')
     years = BeautifulSoup((course_dir/'years.html').read_text('utf8'), 'html.parser')
-    assert [s['id'] for s in years.select('section[id]')] == [f'year-{y}' for y in range(2019,2027)]
-    for lesson in [unit, second, third, fourth, fifth]:
+    assert [s['id'] for s in years.select('section[id]')] == [f'year-{y}' for y in range(2015,2027)]
+    for lesson in lessons:
         assert lesson.select_one('a[href^="years.html"]')
         for step in lesson.select('section[id]:not(#video):not(#check)'):
             assert step.select_one('aside.primary-source a[href^="https://"]')
@@ -428,13 +425,14 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert (course_dir/'lecture-video.js').is_file()
     from urllib.parse import parse_qs, urlsplit
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
-                                   (second,'x6TG2Q1D2TE',[1069,3098,4042,4703]),
-                                   (third,'Wg4HctY-2u4',[208,317,504,943,1190]),
-                                   (fourth,'fxvXX4PatBA',[1563,1649,1827,2069,2238]),
-                                   (fifth,'fxvXX4PatBA',[2515,2604,2679,2830])]:
+                                   (systems,'F1nR4mAbECQ',[540,1500,2145,2220,3500,3850,4300]),
+                                   (gauss,'x6TG2Q1D2TE',[1069,3098,4042,4703]),
+                                   (homogeneous,'Wg4HctY-2u4',[208,317,504,943,1190]),
+                                   (elementary,'fxvXX4PatBA',[1563,1649,1827,2069,2238]),
+                                   (equations,'fxvXX4PatBA',[2515,2604,2679,2830])]:
         video = doc.select_one('section#video')
         assert doc.main.find('section') == video
-        start = f'&t={seconds[0]}s' if doc is fourth or doc is fifth else ''
+        start = f'&t={seconds[0]}s' if doc in (elementary, equations) else ''
         assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id+start
         assert doc.select_one('script[src="lecture-video.js"]')
         assert video.select_one('.inline-video[data-title]')
@@ -454,10 +452,8 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     left, right = values('#left'), values('#right')
     products = [[sum(a*b for a, b in zip(row, col)) for col in zip(*right)] for row in left]
     assert products == values('#result') == [[4, 1], [3, -2]]
-    assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
-    assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
-    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html','elementary.html','matrix-equations.html']
+    assert [a['href'] for a in outline.select('ol a')] == files
     assert outline.select_one('a[href="years.html"]')
     assert 'Запланирован' in outline.select_one('ol li:last-child').get_text()
     assert not outline.select('ol li:last-child a')
@@ -521,3 +517,26 @@ def test_source_board_renders_inert_images(s, tmp_path):
         assert asset.endswith('.png')
         assert (tmp_path/asset).read_bytes().startswith(b'\x89PNG')
     assert path.read_bytes() == data
+
+def test_private_video_frame_is_bound_to_its_png_digest(s, tmp_path):
+    from bs4 import BeautifulSoup
+    fitz = pytest.importorskip('pymupdf')
+    from atlas.excerpts import render_excerpts
+    from atlas.store import digest
+
+    pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 100, 100), False)
+    pix.clear_with(255)
+    data = pix.tobytes('png')
+    sha = digest(data)
+    folder = s.home/'derived'/'video-frames'
+    folder.mkdir(parents=True)
+    path = folder/f'{sha}.png'
+    marker = f'<!-- excerpt frame {sha} 1 0 0 30 30 | Запись на доске. -->'
+    assert render_excerpts(marker, s, tmp_path) == ''
+    path.write_bytes(data)
+    doc = BeautifulSoup(render_excerpts(marker, s, tmp_path), 'html.parser')
+    assert (tmp_path/doc.select_one('.source-page')['href']).read_bytes() == data
+    assert (tmp_path/doc.img['src']).is_file()
+    path.write_bytes(b'changed')
+    with pytest.warns(UserWarning, match='SHA-256 mismatch'):
+        assert render_excerpts(marker, s, tmp_path) == ''

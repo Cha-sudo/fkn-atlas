@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Урок 2. Свойства произведения и системы уравнений · Линейная алгебра ПМИ</title>
+<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head><body><main>
+<header><p class="course-name">ФКН Атлас · ПМИ · основной поток</p>
+<h1>Урок 2. Свойства произведения и системы уравнений</h1>
+<nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="matrices.html">← Урок 1. Матрицы и первые операции</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Далее → Урок 3. Метод Гаусса</a></nav>
+<p>Понадобится правило умножения строки на столбец из первого урока. В конце занятия вы сможете прочитать систему по её расширенной матрице и объяснить, когда две системы эквивалентны.</p></header>
+<section id="video" class="lecture-video" aria-labelledby="video-heading">
+<h2 id="video-heading">Лекция 2 · запись и презентация</h2>
+<p class="recording-meta">Роман Авдеев · основной поток ПМИ 2022/23 · 12 сентября 2022 · 1 ч 19 мин</p>
+<div class="inline-video" data-title="Свойства произведения и системы уравнений · лекция 2 ПМИ 2022/23"></div>
+<a class="watch-recording" href="https://www.youtube.com/watch?v=F1nR4mAbECQ" target="_blank" rel="noopener">▶ Смотреть и слушать лекцию 2 на YouTube</a>
+<p><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Открыть презентацию к этой лекции · 6 страниц</a></p>
+<ul class="video-moments" aria-label="Моменты видеолекции">
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=540s">9:00 · Суммирование</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=1500s">25:00 · Доказательство ассоциативности</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=2145s">35:45 · Почему порядок множителей важен</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=2220s">37:00 · Диагонали</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3500s">58:20 · След матрицы</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3850s">1:04:10 · Решение системы</a></li>
+<li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=4300s">1:11:40 · Матричная запись</a></li></ul>
+<p class="refs"><a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29">План курса · лекция 2</a></p></section>
+<nav aria-label="Разделы занятия"><a href="#products">Свойства произведения</a><a href="#diagonal">Диагональные матрицы и след</a><a href="#matrix-system">Системы уравнений</a><a href="#equivalence">Эквивалентность</a><a href="#check">Самопроверка</a></nav>
+<section id="products"><h2>Что можно менять в произведении</h2>
+<aside class="primary-source"><span>ПМИ 2022/23 · лекция 2</span>
+<a class="clip-start" href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=540s">▶ Суммирование, слайд в записи · 9:00</a> · <a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=1500s">Доказательство у доски · 25:00</a></aside>
+<div class="inline-video" data-title="Суммирование и доказательство ассоциативности · лекция 2"></div>
+<aside class="primary-source"><span>Презентация лекции 2 · ПМИ 2022/23</span>
+<a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Формула произведения и правила суммирования · с. 1–2</a>
+<!-- excerpt 906129a349fc5f77cabab0fd8564ab0cdb920fcd182b976d8a7263248b1ecc14 2 21 126 331 250 | Правила суммирования. Третье свойство меняет порядок двух сумм по элементам прямоугольной матрицы. --></aside>
+<p>На 25:00 проследите за одной клеткой в двух произведениях, (<i>AB</i>)<i>C</i> и <i>A</i>(<i>BC</i>). Найдите на с. 2 правило, которое позволяет преподавателю поменять порядок суммирования. Какие три множителя остаются на своих местах?<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
+<aside class="primary-source"><span>Кадр лекции 2 · ПМИ 2022/23 · пример преподавателя</span>
+<a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=2145s">Контрпример к равенству AB = BA · 35:45</a>
+<!-- excerpt frame 48e006616152c0073af27c793b56277ede377144b458533126d80d40cd1227be 1 421 115 603 220 | На доске у A единственная единица справа вверху, у B — слева внизу. У AB единица слева вверху, у BA — справа внизу. --></aside>
+<p>Перемножьте обе пары в порядке, указанном на доске. Достаточно проверить левую верхнюю клетку. Как она доказывает, что порядок множителей имеет значение?</p>
+</section>
+<section id="diagonal"><h2>Диагональные матрицы и след</h2>
+<aside class="primary-source"><span>ПМИ 2022/23 · лекция 2 · доска преподавателя</span>
+<a class="clip-start" href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=2220s">▶ Диагонали квадратной матрицы · 37:00</a> · <a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=2445s">Диагональная матрица · 40:45</a> · <a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3020s">Единичная матрица · 50:20</a> · <a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3500s">Свойства следа · 58:20</a></aside>
+<div class="inline-video" data-title="Диагонали, единичная матрица и след · лекция 2"></div>
+<p>При просмотре сравните <i>DA</i> и <i>AD</i> для диагональной <i>D</i>. В каком порядке её коэффициенты умножают строки <i>A</i>, а в каком — столбцы? Затем посмотрите, что меняется, когда все диагональные коэффициенты равны единице.</p>
+<p>На 58:20 найдите на доске равенство следов произведений в прямом и обратном порядке. Объясните, почему из него ещё нельзя заключить, что сами произведения равны.</p></section>
+<section id="matrix-system"><h2>От системы уравнений к матрице</h2>
+<aside class="primary-source"><span>ПМИ 2022/23 · лекция 2</span>
+<a class="clip-start" href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3850s">▶ Что значит решить систему · 1:04:10</a> · <a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=4300s">Запись через матрицу · 1:11:40</a></aside>
+<div class="inline-video" data-title="Системы линейных уравнений · лекция 2"></div>
+<aside class="primary-source"><span>Презентация лекции 2 · ПМИ 2022/23</span><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Коэффициенты, неизвестные и правые части · с. 5</a>
+<!-- excerpt 906129a349fc5f77cabab0fd8564ab0cdb920fcd182b976d8a7263248b1ecc14 5 22 26 330 251 | Матрица коэффициентов, столбцы правых частей и неизвестных. Внизу даны формы Ax = b и (A | b). --></aside>
+<p>Сверьте порядок неизвестных на с. 3 и с. 5. Прочитайте вторую строку <i>Ax = b</i> как уравнение. Какой столбец нужно приписать справа к <i>A</i>, чтобы восстановить всю систему?</p></section>
+<section id="equivalence"><h2>Когда у двух систем одни и те же решения</h2>
+<aside class="primary-source"><span>Презентация лекции 2 · ПМИ 2022/23</span><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Совместность и эквивалентность · с. 6, пример 1</a>
+<!-- excerpt 906129a349fc5f77cabab0fd8564ab0cdb920fcd182b976d8a7263248b1ecc14 6 22 28 333 199 | Определения совместности и эквивалентности. Две системы примера 1 имеют одно и то же единственное решение (½, ½). --></aside>
+<p>Запишите расширенные матрицы двух систем из примера 1. Затем сверьтесь со слайдом следующего года, где преподаватель выписал их рядом.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
+<aside class="primary-source"><span>ПМИ 2023/24 · лекция 2 · тот же пример в матричной записи</span><a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Расширенные матрицы в примере 1 · с. 7</a>
+<!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 7 22 64 335 196 | Системы с решением (½, ½) и их расширенные матрицы. Первая строка справа получается сложением двух исходных строк. --></aside></section>
+<section id="check"><h2>Проверьте себя</h2>
+<ol><li><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Лекция 2, с. 4</a>. В примере преподавателя одно уравнение <i>ax = b</i>. Восстановите три случая по значениям <i>a</i> и <i>b</i>.
+<details><summary>Сверить три случая</summary>
+<p>Если <i>a ≠ 0</i>, единственное решение — <i>x = b/a</i>. При <i>a = 0</i> и <i>b ≠ 0</i> решений нет. При <i>a = b = 0</i> подходит любое действительное число.</p></details></li>
+<li>В примере 1 на с. 6 обе системы имеют решение (½, ½). Достаточно ли показать одно общее решение, чтобы установить эквивалентность?
+<details><summary>Проверить обоснование</summary><p>Нужно сравнить множества всех решений. Сложение и вычитание уравнений первой системы дают 2<i>x</i><sub>1</sub> = 1 и 2<i>x</i><sub>2</sub> = 1. Обе координаты определены однозначно, и подстановка подтверждает пару в обеих системах.</p></details></li>
+<li>Пример Атласа. Составьте матричную запись для уравнений 2<i>x</i> + <i>y</i> = 5 и <i>x</i> − <i>y</i> = 1. Проверьте пару (2, 1).
+<details><summary>Сверить матричную запись и подстановку</summary>
+<div class="formula">
+<div class="matrix"><table aria-label="Коэффициенты системы"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></tbody></table></div>
+<div class="formula-term"><span>·</span><div class="matrix"><table aria-label="Неизвестные x и y"><tbody><tr><td>x</td></tr><tr><td>y</td></tr></tbody></table></div></div>
+<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Столбец правых частей"><tbody><tr><td>5</td></tr><tr><td>1</td></tr></tbody></table></div></div>
+</div>
+<p>Прочитайте равенство по строкам.</p>
+<ul>
+<li>Первая строка даёт <i>2x + y = 5</i>.</li>
+<li>Вторая строка даёт <i>x − y = 1</i>.</li>
+</ul>
+<p>Подставим <i>x = 2</i> и <i>y = 1</i>. Получаем <i>2 · 2 + 1 = 5</i> и <i>2 − 1 = 1</i>. Оба уравнения выполнены.</p>
+</details></li>
+</ol></section>
+<footer><details class="lesson-sources"><summary>Источники урока</summary><ol>
+<li id="source-1" tabindex="-1">Запись и презентация относятся к одной строке <a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29">плана ПМИ за 2022/23</a>. Метки ведут к моментам, где видна соответствующая формула или рисунок.</li>
+<li id="source-2" tabindex="-1">Обе системы приведены в <a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">лекции 2 за 2022/23, с. 6</a>. В слайдах 2023/24 к ним добавлена с. 7 с расширенными матрицами.</li></ol>
+<p><a href="years.html">Материалы по годам</a></p></details></footer>
+<nav class="course-nav bottom" aria-label="После урока 2"><a rel="prev" href="matrices.html">← Урок 1. Матрицы и первые операции</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Следующий урок → Урок 3. Метод Гаусса</a></nav>
+</main></body></html>
