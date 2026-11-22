@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Урок 5. Матричные уравнения · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head>
+<body><main><header><p class="course-name">ФКН Атлас · ПМИ · основной поток</p>
+<h1>Урок 5. Матричные уравнения</h1>
+<nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="elementary.html">← Урок 4. Элементарные матрицы</a><a href="index.html">Оглавление курса</a></nav>
+<p>До сих пор справа от черты в методе Гаусса стоял один столбец. Теперь их будет несколько. Вы научитесь находить все подходящие матрицы <i>X</i> и проверять, когда собрать такую матрицу невозможно.</p></header>
+<section id="video" class="lecture-video" aria-labelledby="video-heading"><h2 id="video-heading">Видеолекция</h2>
+<p class="recording-meta">Роман Авдеев · ПМИ 2021/22 · лекция 4 от 27 сентября 2021 года</p>
+<div class="inline-video" data-title="Матричные уравнения · лекция 4 за 2021/22"></div>
+<a class="watch-recording" href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2515s" target="_blank" rel="noopener">▶ Слушать с 41:55 на YouTube</a>
+<p>Разбор уравнений идёт до 50:43. Затем начинается приложение к обратной матрице.</p>
+<ul class="video-moments" aria-label="Моменты видеолекции">
+<li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2515s">41:55 · Два вида уравнений</a></li>
+<li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2604s">43:24 · Зачем транспонировать</a></li>
+<li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2679s">44:39 · Откуда берутся отдельные системы</a></li>
+<li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2830s">47:10 · Все правые части за одной чертой</a></li>
+</ul><p class="refs"><a href="https://www.youtube.com/watch?v=fxvXX4PatBA">Полная запись</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска к этой лекции</a></p></section>
+<nav aria-label="Разделы занятия"><a href="#columns">AX = B по столбцам</a><a href="#gauss">Один проход Гаусса</a><a href="#rows">XA = B по строкам</a><a href="#check">Самопроверка</a></nav>
+<section id="columns"><h2>Как прочитать AX = B по столбцам</h2>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска ПМИ 2021/22 · лекция 4, нижняя часть средней колонки</a> · <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2679s">Слушать с 44:39</a>
+<!-- excerpt board open ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 420 799 790 848 | Рукой преподавателя записана отдельная система для каждого из p столбцов. --></aside>
+<p>На доске <i>X</i><sup>(1)</sup> обозначает первый столбец матрицы <i>X</i>. В произведении <i>AX</i> первый столбец равен <i>AX</i><sup>(1)</sup>. Сравните его с первым столбцом <i>B</i>, затем сделайте то же для остальных. Получаются равенства <i>A</i><i>x</i>₁ = <i>b</i>₁, …, <i>A</i><i>x</i>ₚ = <i>b</i>ₚ, где <i>x</i>ⱼ и <i>b</i>ⱼ — столбцы. Во всех системах коэффициенты одни и те же. Каждому столбцу <i>B</i> нужно своё решение.<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
+<p>Размеры подсказывают, куда ставить ответы. Если <i>A</i> имеет размер <i>m × n</i>, а <i>B</i> — <i>m × p</i>, то в каждом столбце решения <i>n</i> чисел. Поставив <i>p</i> таких столбцов рядом, получим <i>X</i> размера <i>n × p</i>.</p></section>
+<section id="gauss"><h2>Один проход Гаусса для двух правых частей</h2>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2830s">ПМИ 2021/22 · лекция 4, с 47:10</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Общая схема на доске</a>
+<!-- excerpt board fold ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 420 848 790 965 | К обеим частям блока применяются одинаковые преобразования строк, затем отдельно читается каждая система. --></aside>
+<p>Запишите блок <i>(A | B)</i>. Когда вычитаете одну строку из другой, продолжайте вычисление через черту до конца строки. Ведущие и свободные неизвестные определяйте по левой части.</p>
+<aside class="primary-source"><span>Исходный числовой пример</span> <a href="https://drive.google.com/file/d/1SmJk-g90IcXCK8yju_GSHkv4UDXTF502/view">ПМИ 2022/23 · лекция 4, с. 4, одна правая часть</a>
+<!-- excerpt open 2874928ab8be2d2981d9b6e88e356f49de4e83a28502955e5fe2f4b1e7eef601 4 23 167 337 254 | На слайде первая система уже приведена. Решение равно столбцу (1,4,0) плюс t, умноженному на (−3,2,1). --></aside>
+<p><strong>Продолжение примера в Атласе.</strong> Добавим вторую правую часть и начнём на один шаг раньше. Вычтите первую строку из второй. Слева исчезнет единица в первом столбце. Справа изменятся сразу два числа.</p>
+<pre class="matrix-steps" aria-label="До преобразования">1   0   3 │ 1   0
+1   1   1 │ 5   1
+0   0   0 │ 0   0</pre>
+<details open><summary>Результат вычитания</summary>
+<pre class="matrix-steps" aria-label="После преобразования">1   0    3 │ 1   0
+0   1   −2 │ 4   1
+0   0    0 │ 0   0</pre></details>
+<p>С первым столбцом справа получилась в точности система со слайда. При свободной третьей координате <i>s</i> решение равно <i>(1 − 3s, 4 + 2s, s)</i><sup>T</sup>. Во второй системе правые части равны 0 и 1. Выберем её третью координату <i>t</i> и получим <i>(−3t, 1 + 2t, t)</i><sup>T</sup>.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
+<div class="example"><p><strong>Все матрицы X</strong> получаются при независимом выборе вещественных <i>s</i> и <i>t</i>.</p>
+<div class="formula"><i>X =</i><span class="matrix"><table aria-label="Все решения AX равно B"><tbody><tr><td>1 − 3s</td><td>−3t</td></tr><tr><td>4 + 2s</td><td>1 + 2t</td></tr><tr><td>s</td><td>t</td></tr></tbody></table></span></div>
+<p>Для проверки возьмите <i>s = 0, t = 1</i>. Умножение исходной <i>A</i> на столбцы (1, 4, 0)<sup>T</sup> и (−3, 3, 1)<sup>T</sup> возвращает (1, 5, 0)<sup>T</sup> и (0, 1, 0)<sup>T</sup>. Если потребовать <i>s = t</i>, именно это решение потеряется.</p></div>
+<h3>Что решает одна строка нулей</h3><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=Wg4HctY-2u4&amp;t=3228s">ПМИ 2022/23 · лекция 4, с 53:48, несовместный столбец</a></aside>
+<p>Измените в последней строке только крайнюю правую запись на 1. Теперь там <i>0 0 0 | 0 1</i>. Первый столбец по-прежнему можно подобрать. Для второго требуется <i>0 = 1</i>. Собрать полную матрицу <i>X</i> невозможно.<sup class="source-ref"><a href="#source-3" aria-label="Источник 3">[3]</a></sup></p></section>
+<section id="rows"><h2>Что меняется в XA = B</h2>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2604s">ПМИ 2021/22 · лекция 4, с 43:24, переход ко второму виду</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Запись на доске</a>
+<!-- excerpt board open ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 423 698 728 798 | Два вида матричных уравнений и переход от YA = B к A в транспозиции, умноженной на Y в транспозиции. --></aside>
+<p>Неизвестную слева преподаватель обозначил буквой <i>Y</i>. Транспонирование меняет порядок множителей. Если наша неизвестная называется <i>X</i>, получим <strong><i>A</i><sup>T</sup><i>X</i><sup>T</sup> = <i>B</i><sup>T</sup></strong>. Решите это уравнение по столбцам и транспонируйте ответ. Каждый найденный столбец станет строкой <i>X</i>.</p>
+<p><strong>Пример Атласа.</strong> Пусть строки <i>A</i> равны (1, 0, 1) и (0, 1, −1), а строки <i>B</i> — (2, 3, −1) и (4, −1, 5). Здесь запись по строкам особенно коротка. Для строки <i>(u, v)</i> произведение <i>(u, v)A = (u, v, u − v)</i>. Первая строка <i>B</i> требует <i>u = 2, v = 3</i>, и третье число действительно равно −1. Вторая даёт <i>u = 4, v = −1</i> и <i>4 − (−1) = 5</i>. Эти две пары и есть строки единственной матрицы <i>X</i>.</p></section>
+<section id="check"><h2>Проверьте себя</h2><ol>
+<li>В разобранном примере <i>AX = B</i> возьмите <i>s = 1, t = 0</i>. Запишите <i>X</i> и проверьте второй столбец произведения.
+<details><summary>Проверить столбцы</summary><p>Столбцы <i>X</i> равны (−2, 6, 1)<sup>T</sup> и (0, 1, 0)<sup>T</sup>. При умножении <i>A</i> на второй столбец выбирается второй столбец самой <i>A</i>, то есть (0, 1, 0)<sup>T</sup>.</p></details></li>
+<li>В примере <i>XA = B</i> замените число 5 во второй строке <i>B</i> на 6. Можно ли исправить вторую строку <i>X</i>?
+<details><summary>Проверить совместность</summary><p>Первые две координаты уже задали строку (4, −1). Её третья координата после умножения равна 5. При правой части 6 решений нет.</p></details></li>
+<li><aside class="primary-source"><span>Исходный пример для задачи</span> <a href="https://drive.google.com/file/d/1XQ7qsLAgoXZDmLN2O3gq_yo59Dla3EB5/view">ПМИ 2025/26 · лекция 4, с. 3, два свободных параметра</a>
+<!-- excerpt fold ce7349cf98b4f3d1ca7a8babd38583a3c753842f1c077f2f05a2fe4dd59e695d 3 23 162 339 254 | На слайде общее решение для одной правой части имеет два свободных параметра. --></aside>
+На слайде у решения системы свободны вторая и четвёртая координаты. Вопрос Атласа: если записать справа один и тот же совместный столбец дважды, сколько параметров потребуется для общего решения <i>AX = B</i>?
+<details><summary>Проверить число параметров</summary><p>Четыре. Для каждого из двух столбцов <i>X</i> можно независимо выбрать две координаты. Совпадение правых частей позволяет брать одинаковые решения, но также допускает разные.</p></details></li></ol></section>
+<footer><details class="lesson-sources"><summary>Источники урока</summary><ol>
+<li id="source-1" tabindex="-1">В записи и на доске 2021/22 проверены транспонирование, разбиение по столбцам и одновременное исключение. <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2515s">Лекция 4, 41:55–50:43</a>.</li>
+<li id="source-2" tabindex="-1">Система с одной правой частью и её решение взяты со <a href="https://drive.google.com/file/d/1SmJk-g90IcXCK8yju_GSHkv4UDXTF502/view">слайда 4 за 2022/23</a>. Преобразование исходной строки, дополнительная правая часть и проверка на числах составлены для Атласа.</li>
+<li id="source-3" tabindex="-1">Разбор несовместности одной из систем — <a href="https://www.youtube.com/watch?v=Wg4HctY-2u4&amp;t=3228s">ПМИ 2022/23, 53:48–54:53</a>. Вопрос о числе параметров использует <a href="https://drive.google.com/file/d/1XQ7qsLAgoXZDmLN2O3gq_yo59Dla3EB5/view">слайд 3 за 2025/26</a>.</li></ol><p><a href="years.html">Материалы по годам</a></p></details>
+<nav class="course-nav bottom" aria-label="После урока 5"><a rel="prev" href="elementary.html">← Урок 4. Элементарные матрицы</a><a href="index.html">Оглавление курса</a></nav><p>Следующий урок по плану — <strong>6. Обратная матрица</strong>.</p></footer></main></body></html>

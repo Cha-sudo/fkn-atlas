@@ -403,9 +403,14 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert fourth.h1.get_text() == 'Урок 4. Элементарные матрицы'
     assert [a['href'] for a in fourth.select('a[rel=prev]')] == ['homogeneous.html'] * 2
     assert len(fourth.select('#check li details')) == 3
+    assert [a['href'] for a in fourth.select('a[rel=next]')] == ['matrix-equations.html'] * 2
+    fifth = BeautifulSoup((course_dir/'matrix-equations.html').read_text('utf8'), 'html.parser')
+    assert fifth.h1.get_text() == 'Урок 5. Матричные уравнения'
+    assert [a['href'] for a in fifth.select('a[rel=prev]')] == ['elementary.html'] * 2
+    assert len(fifth.select('#check li > details')) == 3
     years = BeautifulSoup((course_dir/'years.html').read_text('utf8'), 'html.parser')
     assert [s['id'] for s in years.select('section[id]')] == [f'year-{y}' for y in range(2019,2027)]
-    for lesson in [unit, second, third, fourth]:
+    for lesson in [unit, second, third, fourth, fifth]:
         assert lesson.select_one('a[href^="years.html"]')
         for step in lesson.select('section[id]:not(#video):not(#check)'):
             assert step.select_one('aside.primary-source a[href^="https://"]')
@@ -419,10 +424,11 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
                                    (second,'x6TG2Q1D2TE',[1069,3098,4042,4703]),
                                    (third,'Wg4HctY-2u4',[208,317,504,943,1190]),
-                                   (fourth,'fxvXX4PatBA',[1563,1649,1827,2069,2238])]:
+                                   (fourth,'fxvXX4PatBA',[1563,1649,1827,2069,2238]),
+                                   (fifth,'fxvXX4PatBA',[2515,2604,2679,2830])]:
         video = doc.select_one('section#video')
         assert doc.main.find('section') == video
-        start = '&t=1563s' if doc is fourth else ''
+        start = f'&t={seconds[0]}s' if doc is fourth or doc is fifth else ''
         assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id+start
         assert doc.select_one('script[src="lecture-video.js"]')
         assert video.select_one('.inline-video[data-title]')
@@ -431,7 +437,7 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
     assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
-    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html','elementary.html']
+    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html','elementary.html','matrix-equations.html']
     assert outline.select_one('a[href="years.html"]')
     assert 'Запланирован' in outline.select_one('ol li:last-child').get_text()
     assert not outline.select('ol li:last-child a')
@@ -476,3 +482,21 @@ def test_private_excerpt_checks_bytes_and_links_the_exact_pdf_page(s, tmp_path):
         assert (img['width'], img['height']) == ('120', '60')
         assert img.parent['href'] == img['src']
         assert (tmp_path/img['src']).read_bytes().startswith(b'\x89PNG')
+
+def test_source_board_renders_inert_images(s, tmp_path):
+    pytest.importorskip('pymupdf')
+    from bs4 import BeautifulSoup
+    from atlas.excerpts import render_excerpts
+    from atlas.store import digest
+
+    data = b'<svg xmlns="http://www.w3.org/2000/svg" width="90" height="40"><rect width="45" height="20"/></svg>'
+    sha = digest(data)
+    path = s.object_path(sha)
+    path.parent.mkdir(exist_ok=True)
+    path.write_bytes(data)
+    marker = f"<!-- excerpt board open {sha} 1 0 0 45 20 | Фрагмент доски -->"
+    doc = BeautifulSoup(render_excerpts(marker, s, tmp_path), 'html.parser')
+    for asset in [doc.select_one('.source-page')['href'], doc.img['src']]:
+        assert asset.endswith('.png')
+        assert (tmp_path/asset).read_bytes().startswith(b'\x89PNG')
+    assert path.read_bytes() == data

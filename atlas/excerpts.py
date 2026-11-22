@@ -1,4 +1,4 @@
-"""Render verified rectangular excerpts for the private course reader."""
+"""Render verified PDF and board excerpts for the private course reader."""
 import html
 import re
 import warnings
@@ -10,7 +10,7 @@ from .store import digest
 # Coordinates are PDF points from the upper left. The adjacent source link also
 # works when the original or the optional PDF renderer is unavailable locally.
 EXCERPT = re.compile(
-    r"<!-- excerpt (open|fold) ([0-9a-f]{64}) (\d+) "
+    r"<!-- excerpt (?:(board) )?(open|fold) ([0-9a-f]{64}) (\d+) "
     r"(\d+) (\d+) (\d+) (\d+) \| ([^<>\n]+?) -->"
 )
 
@@ -24,7 +24,7 @@ def render_excerpts(markup, store, destination):
         pymupdf = None
 
     def render(match):
-        mode, sha, page_number, left, top, right, bottom, description = match.groups()
+        board, mode, sha, page_number, left, top, right, bottom, description = match.groups()
         source = store.object_path(sha)
         if not source.is_file():
             return ""
@@ -32,21 +32,29 @@ def render_excerpts(markup, store, destination):
         if digest(data) != sha:
             warnings.warn(f"Excerpt skipped: SHA-256 mismatch for {source.name}", stacklevel=2)
             return ""
-        filename = f"{sha}.pdf"
         originals = Path(destination) / "originals"
         originals.mkdir(exist_ok=True)
-        original = originals / filename
-        if not original.is_file() or digest(original.read_bytes()) != sha:
-            original.write_bytes(data)
-        page_link = (f'<a class="source-page" href="originals/{filename}#page={page_number}">'
-                     f'Страница {page_number} целиком</a>')
-        if pymupdf is None:
-            return page_link
+        if board:
+            if pymupdf is None:
+                return ""
+            # Serve a rasterized board. Original SVG markup stays in the private store.
+            original = originals / f"{sha}.png"
+            page_link = f'<a class="source-page" href="originals/{original.name}">Доска целиком</a>'
+        else:
+            original = originals / f"{sha}.pdf"
+            if not original.is_file() or digest(original.read_bytes()) != sha:
+                original.write_bytes(data)
+            page_link = (f'<a class="source-page" href="originals/{original.name}#page={page_number}">'
+                         f'Страница {page_number} целиком</a>')
+            if pymupdf is None:
+                return page_link
         rect = pymupdf.Rect(*map(int, (left, top, right, bottom)))
-        with pymupdf.open(stream=data, filetype="pdf") as document:
+        with pymupdf.open(stream=data, filetype="svg" if board else "pdf") as document:
             page = document[int(page_number) - 1]
             if int(page_number) < 1 or rect.is_empty or not page.rect.contains(rect):
                 raise ValueError(f"Invalid excerpt on page {page_number} of {sha}")
+            if board and not original.is_file():
+                page.get_pixmap(matrix=pymupdf.Matrix(2, 2), alpha=False).save(original)
             pixels = page.get_pixmap(matrix=pymupdf.Matrix(3, 3), clip=rect, alpha=False)
         name = f"{sha}-p{page_number}-{left}-{top}-{right}-{bottom}.png"
         folder = Path(destination) / "excerpts"
