@@ -407,6 +407,13 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert [s['id'] for s in years.select('section[id]')] == [f'year-{y}' for y in range(2019,2027)]
     for lesson in [unit, second, third, fourth]:
         assert lesson.select_one('a[href^="years.html"]')
+        for step in lesson.select('section[id]:not(#video):not(#check)'):
+            assert step.select_one('aside.primary-source a[href^="https://"]')
+        assert not lesson.select('img[src^="excerpts/"], a.source-page')
+        citations = [a['href'][1:] for a in lesson.select('section .source-ref a[href^="#"]')]
+        notes = lesson.select('footer .lesson-sources li[id]')
+        assert citations and set(citations) == {note['id'] for note in notes}
+        assert all(note.select_one('a[href^="https://"]') for note in notes)
     assert (course_dir/'lecture-video.js').is_file()
     from urllib.parse import parse_qs, urlsplit
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
@@ -433,3 +440,39 @@ def test_course_entry_and_stream_headings(s, tmp_path):
         item = page.find(id='lesson-'+ident)
         assert item.parent.summary.get_text().startswith(expected)
         assert len(page.find_all(id='lesson-'+ident)) == 1
+
+def test_private_excerpt_checks_bytes_and_links_the_exact_pdf_page(s, tmp_path):
+    import io
+    from importlib.util import find_spec
+
+    from bs4 import BeautifulSoup
+    from pypdf import PdfWriter
+
+    from atlas.excerpts import render_excerpts
+    from atlas.store import digest
+
+    writer = PdfWriter()
+    for _ in range(2):
+        writer.add_blank_page(width=100, height=80)
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    data = buffer.getvalue()
+    sha = digest(data)
+    marker = f"<!-- excerpt open {sha} 2 3 4 43 24 | Формула из тестовой страницы -->"
+    original = '<a href="https://example.org/course.pdf">Слайд 2</a>'
+    assert render_excerpts(original + marker, s, tmp_path) == original
+    path = s.object_path(sha)
+    path.parent.mkdir(exist_ok=True)
+    path.write_bytes(b"incorrect content")
+    with pytest.warns(UserWarning, match="SHA-256 mismatch"):
+        assert render_excerpts(original + marker, s, tmp_path) == original
+    path.write_bytes(data)
+    lesson = BeautifulSoup(render_excerpts(original + marker, s, tmp_path), 'html.parser')
+    target, page = lesson.select_one('.source-page')['href'].split('#')
+    assert page == 'page=2' and (tmp_path/target).read_bytes() == data
+    if find_spec('pymupdf'):
+        img = lesson.select_one('details[open] img')
+        assert img['alt'] == 'Формула из тестовой страницы'
+        assert (img['width'], img['height']) == ('120', '60')
+        assert img.parent['href'] == img['src']
+        assert (tmp_path/img['src']).read_bytes().startswith(b'\x89PNG')

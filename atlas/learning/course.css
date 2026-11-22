@@ -65,3 +65,18 @@ h2,h3{break-after:avoid}
 .year-map dd{margin:0}
 @media(max-width:560px){.year-map dl{display:block}.year-map dd{margin:0 0 .6em}}
 .matrix td.rhs{border-left:1px solid currentColor}
+
+.source-ref{font:normal .72rem/1 system-ui,sans-serif;vertical-align:super;margin-inline-start:.15em}
+.source-ref a{text-decoration:none}
+.source-ref a:hover,.source-ref a:focus-visible{text-decoration:underline}
+.lesson-sources{font-size:.92rem;color:#364e53}
+.lesson-sources li{scroll-margin-block:1rem}
+.lesson-sources li:target{background:#edf3ed}
+
+.primary-source{border-inline-start:2px solid #aac1ba;padding:.1rem 0 .1rem .75rem;margin:.55rem 0 .8rem;font-size:.92rem;line-height:1.45}
+.primary-source>span{display:block;font-size:.81rem;color:#475d59}
+.primary-source .source-image{border:0;padding:0;margin:.35rem 0 0}
+.source-image summary{width:fit-content;cursor:pointer}
+.source-image img{display:block;height:auto;max-width:100%;margin:.4rem 0;background:white}
+.source-image a{display:block;width:fit-content;max-width:100%}
+.primary-source .source-page{display:inline-block;margin-inline-start:.7em}

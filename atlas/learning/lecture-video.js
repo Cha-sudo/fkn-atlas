@@ -16,10 +16,13 @@ if (location.protocol === 'http:' || location.protocol === 'https:') {
   player.src = /^\d+s$/.test(start) ? embedURL + '?start=' + parseInt(start, 10) : embedURL;
   slot.append(player);
 
-  for (const moment of section.querySelectorAll('.video-moments a')) {
+  for (const moment of document.querySelectorAll('.video-moments a, .primary-source a')) {
+    const source = new URL(moment.href);
+    if (source.origin !== watchURL.origin || source.pathname !== watchURL.pathname ||
+        source.searchParams.get('v') !== videoId || !source.searchParams.has('t')) continue;
     moment.addEventListener('click', event => {
       if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
-      const timestamp = new URL(moment.href).searchParams.get('t');
+      const timestamp = source.searchParams.get('t');
       if (!/^\d+s$/.test(timestamp)) return;
       event.preventDefault();
       player.src = embedURL + '?autoplay=1&start=' + parseInt(timestamp, 10);

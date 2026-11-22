@@ -7,6 +7,7 @@ from importlib.resources import files
 import json
 from pathlib import Path
 from urllib.parse import quote, urlsplit, unquote
+from .excerpts import render_excerpts
 from .research import report
 from .store import uid
 
@@ -70,7 +71,12 @@ def write_catalog(store, output):
         destination.mkdir(exist_ok=True)
         learning = files('atlas').joinpath('learning')
         for name in ('course.css', 'lecture-video.js', 'matrices.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'years.html'):
-            (destination/name).write_bytes(learning.joinpath(name).read_bytes())
+            asset = learning.joinpath(name)
+            if name.endswith('.html'):
+                body = render_excerpts(asset.read_text(encoding='utf8'), store, destination)
+                (destination/name).write_text(body, encoding='utf8', newline='\n')
+            else:
+                (destination/name).write_bytes(asset.read_bytes())
         outline = learning.joinpath('index.html').read_text(encoding='utf8')
         catalog_link = f'<a href="../{quote(target.name, safe="")}">Все программы Атласа</a>'
         (destination/'index.html').write_text(outline.replace('<!-- catalog-link -->', catalog_link),
