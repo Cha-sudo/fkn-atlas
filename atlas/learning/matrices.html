@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Урок 1. Матрицы и первые операции · Линейная алгебра ПМИ</title>
-<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head><body><main>
+<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="seminar-player.js"></script><script defer src="material-reader.js"></script></head><body><main>
 <header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 1. Матрицы и первые операции</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="products-and-systems.html">Далее → Урок 2. Свойства произведения и системы уравнений</a></nav>
@@ -24,7 +24,7 @@
 <div id="materials"><!-- document 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 4 | Слайды · лекция 1 ПМИ 2022/23 -->
 <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Слайды · лекция 1 ПМИ 2022/23 · источник на Google Диске</a></div>
 </section>
-<nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a></nav>
+<nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a><a href="#seminar">Видеосеминар</a></nav>
 <section id="shape"><h2>Как читать матрицу</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12TC_aols6gzchKDBK4cvNT5GqCaNpIG1/view">Матрица и индексы · ПМИ 2022/23, лекция 1, с. 4–5</a>
 <!-- excerpt 59b3fd33224b0ce85a2b6ad8338c6019fb139f86e0772b82fce8338898271a80 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
 <p><strong>Пример Атласа.</strong> В таблице <i>Q</i> строки обозначают две мастерские, столбцы — три вида деталей. Сколько деталей третьего вида выпустила вторая мастерская?</p>
@@ -75,6 +75,7 @@
 <p id="calculation" aria-live="polite">c₁₁ = 1 · 2 + 0 · 0 + 2 · 1 = 4</p><noscript><p>Например, c₂₁ = 0 · 2 + (−1) · 0 + 3 · 1 = 3. Кнопки подсветки работают при включённом JavaScript.</p></noscript></div>
 <p>В этом примере <i>AB</i> имеет размер 2 × 2, а <i>BA</i> — 3 × 3. Уже размеры исключают равенство. Бывает, что обратный порядок вообще невозможен. Перед вычислением всегда подпишите размеры обоих множителей.</p>
 <p id="matrix-system"><a href="products-and-systems.html#matrix-system">Матричная запись системы · перейти к лекции 2</a></p>
+<aside id="seminar" class="seminar-practice"><h3>Видеосеминар · Проверьте размеры множителей</h3><p>БПМИ213 · 6 сентября 2021 · основной поток</p><p>На доске преподаватель обводит два размера, которые должны совпасть. Определите размер результата до вычислений.</p><div class="seminar-item"><a class="seminar-watch" href="https://www.youtube.com/watch?v=5U16wnINxgU&amp;t=1600s"><!-- seminar-still 54fe447f8fc8ddd1626a7bdcee8e8668f37215c768a099d9d24386059cfadb4c -->▶ Смотреть с 26:40</a> · <a class="seminar-watch" href="https://www.youtube.com/watch?v=5U16wnINxgU">▶ С начала</a></div><p class="refs"><a href="seminar-213-1.html">Доска, конспект и задачи семинара 1</a> · <a href="seminars.html">Все видеосеминары</a></p><div class="primary-source"><span>Практика у доски · БПМИ246 · 2 сентября 2024</span> <a href="https://drive.google.com/file/d/1bl9hpsNd-5VcndBEEXS8p0TsXhsuCHRa/view">Семинар 1, с. 1 · порядок множителей и вычисление произведения</a> <!-- excerpt bc224797f7a0300b9107a3fcf48e2bafa35e1a719694c428b0f36e47cb964a2e 1 32 140 577 265 | На семинаре перемножают две матрицы в обоих порядках и затем вычисляют выражение с транспонированием. --><p><a href="seminar-246-1.html">Весь семинар и домашние задачи</a></p></div></aside>
 </section>
 <section id="check"><h2>Проверьте себя</h2><p>Числовые упражнения и решения составлены для Атласа. Задача 4 — дополнительная практика по листку ПМИ. Сначала запишите ответ на бумаге. Затем раскройте решение и сравните ход вычислений.</p>
 <ol><li>Для матрицы <i>Q</i> из начала урока найдите <i>q</i><sub>12</sub> и (<i>Q</i><sup>T</sup>)<sub>32</sub>. Можно ли сложить <i>Q</i> с <i>Q</i><sup>T</sup>?

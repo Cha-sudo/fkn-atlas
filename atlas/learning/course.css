@@ -99,3 +99,17 @@ h2,h3{break-after:avoid}
 .material-reader object{width:100%;height:65vh;border:0}
 .material-file{display:inline-block;margin:.4em 0 0;font-size:.9rem}
 @media print{.material-controls,.material-file{display:none}.material-pages{max-height:none;overflow:visible}}
+
+.seminar-list,.seminar-papers{padding:0;list-style:none}
+.seminar-list{display:flex;flex-wrap:wrap;gap:.4em 1.15em}
+.seminar-item:has(.seminar-screen){width:100%}
+.seminar-watch{display:inline-block;margin:.25em .55em .25em 0}
+.seminar-screen{width:100%;margin:.6em 0}
+.seminar-screen iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#202d32}
+.seminar-screen>a{font-size:.9em}
+.seminar-practice{margin:1.4em 0;padding:.3em 0 .6em 1em;border-inline-start:3px solid #98ada6}
+.seminar-practice h3{margin:.3em 0}
+.seminar-papers li{margin:.25em 0}
+
+.seminar-still{display:block;width:min(100%,38rem);height:auto;margin-bottom:.4rem}
+.seminar-item:has(.seminar-screen) .seminar-still{display:none}

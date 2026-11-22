@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from urllib.parse import quote, urlsplit, unquote
 from .excerpts import render_excerpts
+from .seminars import write_seminars
 from .research import report
 from .store import uid
 
@@ -71,13 +72,14 @@ def write_catalog(store, output):
         destination.mkdir(exist_ok=True)
         learning = files('atlas').joinpath('learning')
         page_images = {}
-        for name in ('course.css', 'lecture-video.js', 'material-reader.js', 'matrices.html', 'products-and-systems.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'matrix-equations.html', 'years.html'):
+        for name in ('course.css', 'lecture-video.js', 'material-reader.js', 'seminar-player.js', 'matrices.html', 'products-and-systems.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'matrix-equations.html', 'years.html'):
             asset = learning.joinpath(name)
             if name.endswith('.html'):
                 body = render_excerpts(asset.read_text(encoding='utf8'), store, destination, page_images)
                 (destination/name).write_text(body, encoding='utf8', newline='\n')
             else:
                 (destination/name).write_bytes(asset.read_bytes())
+        write_seminars(store, destination, page_images)
         outline = learning.joinpath('index.html').read_text(encoding='utf8')
         catalog_link = f'<a href="../{quote(target.name, safe="")}">Все программы Атласа</a>'
         (destination/'index.html').write_text(outline.replace('<!-- catalog-link -->', catalog_link),

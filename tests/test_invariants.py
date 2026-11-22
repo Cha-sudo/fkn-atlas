@@ -583,3 +583,39 @@ def test_private_video_frame_is_bound_to_its_png_digest(s, tmp_path):
     path.write_bytes(b'changed')
     with pytest.warns(UserWarning, match='SHA-256 mismatch'):
         assert render_excerpts(marker, s, tmp_path) == ''
+
+
+def test_seminar_archive_keeps_video_identity_and_document_fallbacks(s, tmp_path):
+    import json
+    from importlib.resources import files
+    from urllib.parse import parse_qs, urlsplit
+    from bs4 import BeautifulSoup
+    from atlas.seminars import CHECKED, write_seminars
+
+    curated = json.loads(files('atlas').joinpath('learning', 'seminars.json').read_text('utf8'))
+    write_seminars(s, tmp_path, {})
+    archive = BeautifulSoup((tmp_path / 'seminars.html').read_bytes(), 'html.parser')
+    ids = [parse_qs(urlsplit(link['href']).query)['v'][0] for link in archive.select('.seminar-watch')]
+    groups = [g for year in curated['years'].values() for g in year['groups'].values()]
+    assert len(ids) == len(set(ids)) == sum(map(len, groups))
+    for number, docs in curated['group213'].items():
+        page = BeautifulSoup((tmp_path / f'seminar-213-{number}.html').read_bytes(), 'html.parser')
+        assert len(page.select('a[href^="https://disk.yandex.ru/d/"]')) == len(docs)
+        for link in page.select('.seminar-watch'):
+            assert parse_qs(urlsplit(link['href']).query)['v'][0] in ids
+        if number in CHECKED:
+            assert f't={CHECKED[number][3]}s' in page.select('.seminar-watch')[-1]['href']
+    for group, source in curated['handouts'].items():
+        for number, file_id, sha in source['files']:
+            handout = BeautifulSoup((tmp_path / f'seminar-{group}-{number}.html').read_bytes(), 'html.parser')
+            assert handout.find('a', href=f'https://drive.google.com/file/d/{file_id}/view')
+            assert len(sha) == 64
+    for file in files('atlas').joinpath('learning').iterdir():
+        if not file.name.endswith('.html'):
+            continue
+        lesson = BeautifulSoup(file.read_text('utf8'), 'html.parser')
+        if lesson.select_one('.lecture-video'):
+            timed, start = lesson.select('#seminar .seminar-watch')
+            link = parse_qs(urlsplit(timed['href']).query)
+            assert link['v'][0] in ids and link['t'][0].endswith('s')
+            assert parse_qs(urlsplit(start['href']).query) == {'v': link['v']}

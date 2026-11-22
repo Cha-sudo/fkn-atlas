@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Урок 5. Элементарные матрицы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head>
+<title>Урок 5. Элементарные матрицы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="seminar-player.js"></script><script defer src="material-reader.js"></script></head>
 <body><main><header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 5. Элементарные матрицы</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="homogeneous.html">← Урок 4. Однородные системы</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="matrix-equations.html">Далее → Урок 6. Матричные уравнения</a></nav>
@@ -20,7 +20,7 @@
 <div id="materials"><!-- document board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 | Доска · лекция 4 ПМИ 2021/22 -->
 <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска · лекция 4 ПМИ 2021/22 · источник на Google Диске</a></div>
 </section>
-<nav aria-label="Разделы занятия"><a href="#build">Построить матрицу</a><a href="#order">Порядок шагов</a><a href="#check">Самопроверка</a></nav>
+<nav aria-label="Разделы занятия"><a href="#build">Построить матрицу</a><a href="#order">Порядок шагов</a><a href="#check">Самопроверка</a><a href="#seminar">Видеосеминар</a></nav>
 <section id="build"><h2>Проделайте операцию с единичной матрицей</h2>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1649s">Умножение слева · ПМИ 2021/22, лекция 4, с 27:29</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска, средняя колонка</a>
 <!-- excerpt board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 405 291 804 590 | Запись преподавателя о трёх элементарных преобразованиях строк и матрицах, которые выполняют эти преобразования умножением слева. --></aside>
@@ -33,7 +33,8 @@
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1649s">Матрицы трёх операций · ПМИ 2021/22, лекция 4, с 27:29</a> · <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2069s">Умножение строки на число с 34:29</a></aside>
 <ul><li><strong>Прибавить к строке i строку j с коэффициентом λ</strong>, где <i>i ≠ j</i>. В единичной матрице поставьте <i>λ</i> на место <i>(i, j)</i>. Для обратного шага возьмите <i>−λ</i>.</li>
 <li><strong>Поменять строки i и j местами.</strong> Поменяйте те же строки в единичной матрице. Повторение обмена возвращает исходную матрицу.</li>
-<li><strong>Умножить строку i на λ</strong>, где <i>λ ≠ 0</i>. Замените соответствующую диагональную единицу на <i>λ</i>. Обратный множитель равен <i>1/λ</i>. Нулевой множитель стёр бы данные строки.</li></ul></section>
+<li><strong>Умножить строку i на λ</strong>, где <i>λ ≠ 0</i>. Замените соответствующую диагональную единицу на <i>λ</i>. Обратный множитель равен <i>1/λ</i>. Нулевой множитель стёр бы данные строки.</li></ul><aside id="seminar" class="seminar-practice"><h3>Видеосеминар · Как левый множитель выбирает строку</h3><p>БПМИ213 · 6 сентября 2021 · основной поток</p><p>На доске показано произведение специальной матрицы на A. Проследите, какая строка A оказывается в результате. Это подготовка к построению матрицы преобразования.</p><div class="seminar-item"><a class="seminar-watch" href="https://www.youtube.com/watch?v=5U16wnINxgU&amp;t=2900s"><!-- seminar-still 78f3b82ada812d85b27abda303cfce6cda7c7e04fde14abc5fa4c3e00e2b4e3d -->▶ Смотреть с 48:20</a> · <a class="seminar-watch" href="https://www.youtube.com/watch?v=5U16wnINxgU">▶ С начала</a></div><p class="refs"><a href="seminar-213-1.html">Доска, конспект и задачи семинара 1</a> · <a href="seminars.html">Все видеосеминары</a></p></aside>
+</section>
 <section id="order"><h2>Почему последний шаг записывается слева</h2>
 <p class="refs">Разбор Атласа по правилу умножения слева. <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1649s">Правило в лекции 2021/22, с 27:29</a></p>
 <p>Пусть <i>E</i> вычитает удвоенную первую строку из второй, а <i>P</i> меняет строки местами. Если сначала выполнить вычитание, затем обмен, получим <i>P(EA) = (PE)A</i>. Это правило действует и для расширенной матрицы целиком.</p>

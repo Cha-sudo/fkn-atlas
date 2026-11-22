@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Урок 6. Матричные уравнения · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head>
+<title>Урок 6. Матричные уравнения · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="seminar-player.js"></script><script defer src="material-reader.js"></script></head>
 <body><main><header><p class="course-name">ФКН Атлас · ПМИ · основной поток</p>
 <h1>Урок 6. Матричные уравнения</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="elementary.html">← Урок 5. Элементарные матрицы</a><a href="index.html">Оглавление курса</a></nav>
@@ -19,12 +19,13 @@
 <div id="materials"><!-- document board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 | Доска · лекция 4 ПМИ 2021/22 -->
 <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска · лекция 4 ПМИ 2021/22 · источник на Google Диске</a></div>
 </section>
-<nav aria-label="Разделы занятия"><a href="#columns">AX = B по столбцам</a><a href="#gauss">Один проход Гаусса</a><a href="#rows">XA = B по строкам</a><a href="#check">Самопроверка</a></nav>
+<nav aria-label="Разделы занятия"><a href="#columns">AX = B по столбцам</a><a href="#gauss">Один проход Гаусса</a><a href="#rows">XA = B по строкам</a><a href="#check">Самопроверка</a><a href="#seminar">Видеосеминар</a></nav>
 <section id="columns"><h2>Как прочитать AX = B по столбцам</h2>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска ПМИ 2021/22 · лекция 4, нижняя часть средней колонки</a> · <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2679s">Слушать с 44:39</a>
 <!-- excerpt board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 420 799 790 848 | Рукой преподавателя записана отдельная система для каждого из p столбцов. --></aside>
 <p>На доске <i>X</i><sup>(1)</sup> обозначает первый столбец матрицы <i>X</i>. В произведении <i>AX</i> первый столбец равен <i>AX</i><sup>(1)</sup>. Сравните его с первым столбцом <i>B</i>, затем сделайте то же для остальных. Получаются равенства <i>A</i><i>x</i>₁ = <i>b</i>₁, …, <i>A</i><i>x</i>ₚ = <i>b</i>ₚ, где <i>x</i>ⱼ и <i>b</i>ⱼ — столбцы. Во всех системах коэффициенты одни и те же. Каждому столбцу <i>B</i> нужно своё решение.<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
-<p>Размеры подсказывают, куда ставить ответы. Если <i>A</i> имеет размер <i>m × n</i>, а <i>B</i> — <i>m × p</i>, то в каждом столбце решения <i>n</i> чисел. Поставив <i>p</i> таких столбцов рядом, получим <i>X</i> размера <i>n × p</i>.</p></section>
+<p>Размеры подсказывают, куда ставить ответы. Если <i>A</i> имеет размер <i>m × n</i>, а <i>B</i> — <i>m × p</i>, то в каждом столбце решения <i>n</i> чисел. Поставив <i>p</i> таких столбцов рядом, получим <i>X</i> размера <i>n × p</i>.</p><aside id="seminar" class="seminar-practice"><h3>Видеосеминар · Как обратить умножение слева</h3><p>БПМИ213 · 20 сентября 2021 · основной поток</p><p>Преподаватель умножает уравнение Ax = b слева на обратную матрицу. Примените этот шаг к одному столбцу правой части матричного уравнения.</p><div class="seminar-item"><a class="seminar-watch" href="https://www.youtube.com/watch?v=AStD0u_Rhpc&amp;t=4300s"><!-- seminar-still 6ffbe7e38608da1752e096d1427615a2b0b1f66f8518aeb096e04b7bb0651d8c -->▶ Смотреть с 1:11:40</a> · <a class="seminar-watch" href="https://www.youtube.com/watch?v=AStD0u_Rhpc">▶ С начала</a></div><p class="refs"><a href="seminar-213-3.html">Доска, конспект и задачи семинара 3</a> · <a href="seminars.html">Все видеосеминары</a></p></aside>
+</section>
 <section id="gauss"><h2>Один проход Гаусса для двух правых частей</h2>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2830s">ПМИ 2021/22 · лекция 4, с 47:10</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Общая схема на доске</a>
 <!-- excerpt board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 420 848 790 965 | К обеим частям блока применяются одинаковые преобразования строк, затем отдельно читается каждая система. --></aside>

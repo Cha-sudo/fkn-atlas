@@ -9,6 +9,7 @@ if (location.protocol === 'http:' || location.protocol === 'https:') {
   let activeSlot;
 
   function show(slot, url, play) {
+    if (play) document.dispatchEvent(new Event('atlas:lecture-start'));
     const player = document.createElement('iframe');
     player.title = slot.dataset.title;
     player.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -44,6 +45,18 @@ if (location.protocol === 'http:' || location.protocol === 'https:') {
       player.scrollIntoView({block: 'nearest'});
     }
   }
+
+  document.addEventListener('atlas:seminar-start', () => {
+    if (!activeSlot) return;
+    activeSlot.replaceChildren();
+    const resume = document.createElement('button');
+    resume.type = 'button';
+    resume.className = 'watch-recording';
+    resume.textContent = 'Смотреть лекцию здесь';
+    resume.addEventListener('click', () => show(mainSlot, watchURL, true));
+    mainSlot.replaceChildren(resume);
+    activeSlot = null;
+  });
 
   // A direct link to the topic opens the lecturer at that topic's timestamp.
   const initialSection = document.getElementById(location.hash.slice(1));

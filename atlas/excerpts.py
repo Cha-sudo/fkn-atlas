@@ -18,8 +18,11 @@ EXCERPT = re.compile(
 DOCUMENT = re.compile(r"<!-- document (?:(board) )?([0-9a-f]{64}) (\d+) \| ([^<>\n]+?) -->")
 
 
+SEMINAR_STILL = re.compile(r"<!-- seminar-still ([0-9a-f]{64}) -->")
+
+
 def render_excerpts(markup, store, destination, page_images=None):
-    if "<!-- excerpt " not in markup and "<!-- document " not in markup:
+    if "<!-- excerpt " not in markup and "<!-- document " not in markup and "<!-- seminar-still " not in markup:
         return markup
     try:
         import pymupdf
@@ -143,4 +146,12 @@ def render_excerpts(markup, store, destination, page_images=None):
                 f'<img src="{url}" width="{pixels.width}" height="{pixels.height}" '
                 f'loading="lazy" alt="{html.escape(description, quote=True)}"></a></figure>')
 
-    return EXCERPT.sub(render, DOCUMENT.sub(render_document, markup))
+    def seminar_still(match):
+        sha = match[1]
+        data = read_source("frame", sha)
+        if data is None:
+            return ""
+        path = copy_original(sha, data, "png")
+        return f'<img class="seminar-still" src="{path}" alt="" loading="lazy">'
+
+    return EXCERPT.sub(render, DOCUMENT.sub(render_document, SEMINAR_STILL.sub(seminar_still, markup)))

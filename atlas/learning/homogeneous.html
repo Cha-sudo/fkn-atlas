@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Урок 4. Однородные системы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head>
+<title>Урок 4. Однородные системы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="seminar-player.js"></script><script defer src="material-reader.js"></script></head>
 <body><main><header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 4. Однородные системы</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="gauss.html">← Урок 3. Метод Гаусса и общее решение</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="elementary.html">Далее → Урок 5. Элементарные матрицы</a></nav>
@@ -21,7 +21,7 @@
 <div id="materials"><!-- document 2874928ab8be2d2981d9b6e88e356f49de4e83a28502955e5fe2f4b1e7eef601 3 | Слайды · лекция 4 ПМИ 2022/23 -->
 <a href="https://drive.google.com/file/d/1SmJk-g90IcXCK8yju_GSHkv4UDXTF502/view">Слайды · лекция 4 ПМИ 2022/23 · источник на Google Диске</a></div>
 </section>
-<nav aria-label="Разделы занятия"><a href="#zero">Нулевое решение</a><a href="#shift">От одного решения ко всем</a><a href="#directions">Свободные направления</a><a href="#check">Самопроверка</a></nav>
+<nav aria-label="Разделы занятия"><a href="#zero">Нулевое решение</a><a href="#shift">От одного решения ко всем</a><a href="#directions">Свободные направления</a><a href="#check">Самопроверка</a><a href="#seminar">Видеосеминар</a></nav>
 <section id="zero"><h2>Что меняется, когда справа стоят нули</h2>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://www.dropbox.com/s/g88fn16jmmolymm/Lec04_2020-09-28.pdf?dl=0">Однородная система · ПМИ 2020/21, лекция 4, с. 3</a>
 <!-- excerpt eff6240192ea78f2a69f211df347b4df77068d9f0370caf64dede039a71b352f 3 23 28 342 79 | Определение однородной системы через её правые части. --></aside>
@@ -55,7 +55,8 @@
 <div class="equations">x₁ − x₂ + 3x₄ = 1<br>x₃ − 2x₄ = 4.</div>
 <p>Выберем <i>x₂ = s</i> и <i>x₄ = t</i>. Из второй строки <i>x₃ = 4 + 2t</i>, из первой <i>x₁ = 1 + s − 3t</i>. Соберём постоянную часть и коэффициенты при каждом параметре.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
 <div class="example"><p><i>x = (1, 0, 4, 0) + s(1, 1, 0, 0) + t(−3, 0, 2, 1).</i></p>
-<p>Прибавьте единицу только к <i>s</i>, затем только к <i>t</i>. Первый шаг меняет вторую координату, сохраняя четвёртую. Второй меняет четвёртую, сохраняя вторую. Эти два независимых направления вместе задают плоскость решений в ℝ⁴.</p></div></section>
+<p>Прибавьте единицу только к <i>s</i>, затем только к <i>t</i>. Первый шаг меняет вторую координату, сохраняя четвёртую. Второй меняет четвёртую, сохраняя вторую. Эти два независимых направления вместе задают плоскость решений в ℝ⁴.</p></div><aside id="seminar" class="seminar-practice"><h3>Видеосеминар · Как свободные координаты задают направления</h3><p>БПМИ213 · 20 сентября 2021 · основной поток</p><p>Преподаватель выражает главные координаты через две свободные. Найдите на доске постоянный столбец и два столбца при параметрах.</p><div class="seminar-item"><a class="seminar-watch" href="https://www.youtube.com/watch?v=AStD0u_Rhpc&amp;t=3050s"><!-- seminar-still 09dccf389dd0900997a6ce78c221460df73dfe328fb989fb67f488bd9dcd04c9 -->▶ Смотреть с 50:50</a> · <a class="seminar-watch" href="https://www.youtube.com/watch?v=AStD0u_Rhpc">▶ С начала</a></div><p class="refs"><a href="seminar-213-3.html">Доска, конспект и задачи семинара 3</a> · <a href="seminars.html">Все видеосеминары</a></p></aside>
+</section>
 <section id="check"><h2>Проверьте себя</h2><p class="refs">Задачи и разбор решений составлены для Атласа.</p><ol>
 <li>Найдите все решения <i>x + y − z = 0</i>, запишите их через два параметра и предъявите ненулевое решение.
 <details><summary>Проверить параметры</summary><p>Положим <i>y = s</i>, <i>z = t</i>. Тогда <i>x = −s + t</i>. Все решения имеют вид <i>s(−1, 1, 0) + t(1, 0, 1)</i>. Например, при <i>s = 1</i>, <i>t = 0</i> получается <i>(−1, 1, 0)</i>. Координаты <i>y</i> и <i>z</i> однозначно возвращают оба параметра.</p></details></li>
