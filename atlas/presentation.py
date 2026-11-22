@@ -70,10 +70,11 @@ def write_catalog(store, output):
         destination = target.parent/'atlas-lessons'
         destination.mkdir(exist_ok=True)
         learning = files('atlas').joinpath('learning')
-        for name in ('course.css', 'lecture-video.js', 'matrices.html', 'products-and-systems.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'matrix-equations.html', 'years.html'):
+        page_images = {}
+        for name in ('course.css', 'lecture-video.js', 'material-reader.js', 'matrices.html', 'products-and-systems.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'matrix-equations.html', 'years.html'):
             asset = learning.joinpath(name)
             if name.endswith('.html'):
-                body = render_excerpts(asset.read_text(encoding='utf8'), store, destination)
+                body = render_excerpts(asset.read_text(encoding='utf8'), store, destination, page_images)
                 (destination/name).write_text(body, encoding='utf8', newline='\n')
             else:
                 (destination/name).write_bytes(asset.read_bytes())

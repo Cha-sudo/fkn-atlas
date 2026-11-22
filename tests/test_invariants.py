@@ -423,6 +423,8 @@ def test_course_entry_and_stream_headings(s, tmp_path):
         assert citations and set(citations) == {note['id'] for note in notes}
         assert all(note.select_one('a[href^="https://"]') for note in notes)
     assert (course_dir/'lecture-video.js').is_file()
+    assert (course_dir/'material-reader.js').is_file()
+    assert all(doc.select_one('script[src="material-reader.js"]') for doc in lessons)
     from urllib.parse import parse_qs, urlsplit
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
                                    (systems,'F1nR4mAbECQ',[540,1500,2145,2220,3500,3850,4300]),
@@ -499,6 +501,47 @@ def test_private_excerpt_checks_bytes_and_links_the_exact_pdf_page(s, tmp_path):
         assert (img['width'], img['height']) == ('120', '60')
         assert img.parent['href'] == img['src']
         assert (tmp_path/img['src']).read_bytes().startswith(b'\x89PNG')
+
+def test_course_document_shows_every_page_of_the_pinned_pdf(s, tmp_path, monkeypatch):
+    import io
+    import sys
+    from bs4 import BeautifulSoup
+    from pypdf import PdfWriter
+    from atlas.excerpts import render_excerpts
+    from atlas.store import digest
+
+    pytest.importorskip('pymupdf')
+    pdf = PdfWriter()
+    pdf.add_blank_page(width=100, height=80)
+    pdf.add_blank_page(width=80, height=100)
+    buffer = io.BytesIO()
+    pdf.write(buffer)
+    data = buffer.getvalue()
+    sha = digest(data)
+    source = s.object_path(sha)
+    marker = f'<!-- document {sha} 2 | Лекция & задачи -->'
+    fallback = '<a href="https://example.org">Источник</a>'
+    assert render_excerpts(marker + fallback, s, tmp_path) == fallback
+    source.parent.mkdir(exist_ok=True)
+    source.write_bytes(data)
+    markup = render_excerpts(marker + fallback, s, tmp_path)
+    doc = BeautifulSoup(markup, 'html.parser')
+    viewer = doc.select_one('.material-reader')
+    assert viewer['data-start'] == '2' and viewer.figcaption.get_text() == 'Лекция & задачи'
+    pages = viewer.select('.material-pages img')
+    assert [p['src'] for p in pages] == [f'pages/{sha}-{n}.png' for n in (1, 2)]
+    assert [p['width'] for p in pages] == ['1800', '1440']
+    assert all((tmp_path/p['src']).is_file() for p in pages)
+    assert (tmp_path / viewer.select_one('.material-file')['href']).read_bytes() == data
+    with monkeypatch.context() as context:
+        context.setitem(sys.modules, 'pymupdf', None)
+        native = BeautifulSoup(render_excerpts(marker + fallback, s, tmp_path), 'html.parser')
+        assert native.select_one('object')['data'] == f'originals/{sha}.pdf#page=2'
+        assert native.select_one('object a')['href'] == f'originals/{sha}.pdf'
+    source.write_bytes(b'changed')
+    with pytest.warns(UserWarning, match='SHA-256 mismatch'):
+        assert render_excerpts(marker + fallback, s, tmp_path) == fallback
+
 
 def test_source_board_renders_inert_images(s, tmp_path):
     pytest.importorskip('pymupdf')

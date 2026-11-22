@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Урок 2. Свойства произведения и системы уравнений · Линейная алгебра ПМИ</title>
-<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head><body><main>
+<link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head><body><main>
 <header><p class="course-name">ФКН Атлас · ПМИ · основной поток</p>
 <h1>Урок 2. Свойства произведения и системы уравнений</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="matrices.html">← Урок 1. Матрицы и первые операции</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="gauss.html">Далее → Урок 3. Метод Гаусса</a></nav>
@@ -11,7 +11,6 @@
 <p class="recording-meta">Роман Авдеев · основной поток ПМИ 2022/23 · 12 сентября 2022 · 1 ч 19 мин</p>
 <div class="inline-video" data-title="Свойства произведения и системы уравнений · лекция 2 ПМИ 2022/23"></div>
 <a class="watch-recording" href="https://www.youtube.com/watch?v=F1nR4mAbECQ" target="_blank" rel="noopener">▶ Смотреть и слушать лекцию 2 на YouTube</a>
-<p><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Открыть презентацию к этой лекции · 6 страниц</a></p>
 <ul class="video-moments" aria-label="Моменты видеолекции">
 <li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=540s">9:00 · Суммирование</a></li>
 <li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=1500s">25:00 · Доказательство ассоциативности</a></li>
@@ -20,7 +19,10 @@
 <li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3500s">58:20 · След матрицы</a></li>
 <li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=3850s">1:04:10 · Решение системы</a></li>
 <li><a href="https://www.youtube.com/watch?v=F1nR4mAbECQ&amp;t=4300s">1:11:40 · Матричная запись</a></li></ul>
-<p class="refs"><a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29">План курса · лекция 2</a></p></section>
+<p class="refs"><a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2022/2023_%28основной_поток%29">План курса · лекция 2</a></p>
+<div id="materials"><!-- document 906129a349fc5f77cabab0fd8564ab0cdb920fcd182b976d8a7263248b1ecc14 1 | Слайды · лекция 2 ПМИ 2022/23 -->
+<a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Слайды · лекция 2 ПМИ 2022/23 · источник на Google Диске</a></div>
+</section>
 <nav aria-label="Разделы занятия"><a href="#products">Свойства произведения</a><a href="#diagonal">Диагональные матрицы и след</a><a href="#matrix-system">Системы уравнений</a><a href="#equivalence">Эквивалентность</a><a href="#check">Самопроверка</a></nav>
 <section id="products"><h2>Что можно менять в произведении</h2>
 <aside class="primary-source"><span>ПМИ 2022/23 · лекция 2</span>
@@ -55,7 +57,9 @@
 <aside class="primary-source"><span>ПМИ 2023/24 · лекция 2 · тот же пример в матричной записи</span><a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Расширенные матрицы в примере 1 · с. 7</a>
 <!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 7 22 64 335 196 | Системы с решением (½, ½) и их расширенные матрицы. Первая строка справа получается сложением двух исходных строк. --></aside></section>
 <section id="check"><h2>Проверьте себя</h2>
-<ol><li><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Лекция 2, с. 4</a>. В примере преподавателя одно уравнение <i>ax = b</i>. Восстановите три случая по значениям <i>a</i> и <i>b</i>.
+<ol><li><a href="https://drive.google.com/file/d/1tIpQMfut5MBLMTasAOUMWBgljQoCHxQe/view">Лекция 2, с. 4</a>
+<!-- excerpt 906129a349fc5f77cabab0fd8564ab0cdb920fcd182b976d8a7263248b1ecc14 4 24 90 327 162 | Разбор уравнения ax = b. На слайде показаны случаи единственного решения, отсутствия решений и бесконечного множества решений. -->
+В примере преподавателя одно уравнение <i>ax = b</i>. Сравните последние два случая. Почему при нулевом коэффициенте изменение правой части меняет множество решений?
 <details><summary>Сверить три случая</summary>
 <p>Если <i>a ≠ 0</i>, единственное решение — <i>x = b/a</i>. При <i>a = 0</i> и <i>b ≠ 0</i> решений нет. При <i>a = b = 0</i> подходит любое действительное число.</p></details></li>
 <li>В примере 1 на с. 6 обе системы имеют решение (½, ½). Достаточно ли показать одно общее решение, чтобы установить эквивалентность?

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Урок 5. Элементарные матрицы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script></head>
+<title>Урок 5. Элементарные матрицы · Линейная алгебра ПМИ</title><link rel="stylesheet" href="course.css"><script defer src="lecture-video.js"></script><script defer src="material-reader.js"></script></head>
 <body><main><header><p class="course-name">ФКН Атлас · ПМИ · Линейная алгебра и геометрия</p>
 <h1>Урок 5. Элементарные матрицы</h1>
 <nav class="course-nav" aria-label="Навигация по курсу"><a rel="prev" href="homogeneous.html">← Урок 4. Однородные системы</a><a href="index.html">Оглавление курса</a><a class="next" rel="next" href="matrix-equations.html">Далее → Урок 6. Матричные уравнения</a></nav>
@@ -16,10 +16,14 @@
 <li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1827s" target="_blank" rel="noopener">30:27 · Как поменять две строки местами</a></li>
 <li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2069s" target="_blank" rel="noopener">34:29 · Как умножить строку на число</a></li>
 <li><a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2238s" target="_blank" rel="noopener">37:18 · Переход к операциям над столбцами</a></li>
-</ul><p class="refs"><a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2021/2022_%28основной_поток%29">План 2021/22</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Снимок доски, средняя колонка</a> · <a href="https://www.youtube.com/watch?v=Wg4HctY-2u4&amp;t=1755s">Другое объяснение, 2022/23, с 29:15</a>.</p></section>
+</ul><p class="refs"><a href="https://wikics.site/Линейная_алгебра_и_геометрия_на_ПМИ_2021/2022_%28основной_поток%29">План 2021/22</a> · <a href="https://www.youtube.com/watch?v=Wg4HctY-2u4&amp;t=1755s">Другое объяснение, 2022/23, с 29:15</a>.</p>
+<div id="materials"><!-- document board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 | Доска · лекция 4 ПМИ 2021/22 -->
+<a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска · лекция 4 ПМИ 2021/22 · источник на Google Диске</a></div>
+</section>
 <nav aria-label="Разделы занятия"><a href="#build">Построить матрицу</a><a href="#order">Порядок шагов</a><a href="#check">Самопроверка</a></nav>
 <section id="build"><h2>Проделайте операцию с единичной матрицей</h2>
-<aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1649s">Умножение слева · ПМИ 2021/22, лекция 4, с 27:29</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска, средняя колонка</a></aside>
+<aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=1649s">Умножение слева · ПМИ 2021/22, лекция 4, с 27:29</a> · <a href="https://drive.google.com/file/d/185L-_i3tuv2A2Go50-xI7ge3yGYmPVME/view">Доска, средняя колонка</a>
+<!-- excerpt board ccecf6bdab694b7c33cfed2afe225ca9fca2cdeef1e0759f9f687862857ce817 1 405 291 804 590 | Запись преподавателя о трёх элементарных преобразованиях строк и матрицах, которые выполняют эти преобразования умножением слева. --></aside>
 <p>Пусть у матрицы <i>A</i> две строки. В произведении <i>EA</i> каждая строка <i>E</i> задаёт коэффициенты, с которыми складываются строки <i>A</i>. Например, строка <i>(−2, 1)</i> означает «вторая строка минус удвоенная первая». Строка <i>(1, 0)</i> сохраняет первую строку. Чтобы построить <i>E</i>, проделайте нужную операцию со строками единичной матрицы.<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
 <div class="example"><p><strong>Пример Атласа.</strong> Возьмём расширенную матрицу знакомой системы. Вертикальная черта отделяет правую часть.</p>
 <div class="formula"><i>A =</i><span class="matrix"><table aria-label="Исходная расширенная матрица"><tbody><tr><td>1</td><td>2</td><td>1</td><td class="rhs">4</td></tr><tr><td>2</td><td>4</td><td>3</td><td class="rhs">9</td></tr></tbody></table></span></div>
@@ -38,12 +42,14 @@
 <!-- excerpt 091337a2928d9be24cb8dfb01bff27bf46db8bdfff3ffeb83809785a0d8dc650 1 31 82 580 118 | Первая часть задачи о произведении обратимой матрицы и матрицы в улучшенном ступенчатом виде. --></aside>
 <p><strong>Как восстановить исходную матрицу?</strong> Если после двух шагов получилось <i>C = PEA</i>, сначала отмените обмен строк, затем вычитание. Получится <i>A = E⁻¹P⁻¹C</i>.</p>
 <p>Точно так же можно любую матрицу <i>A</i> записать как <i>BC</i>, где <i>C</i> имеет улучшенный ступенчатый вид, а <i>B</i> обратима. Приведите <i>A</i> к <i>C</i> методом Гаусса. Матрица <i>B</i> выполняет все обратные шаги от <i>C</i> к <i>A</i>. Обратная к <i>B</i> матрица снова выполняет прямой ход от <i>A</i> к <i>C</i>.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
-</div>
+
+<div id="worksheet"><!-- document 091337a2928d9be24cb8dfb01bff27bf46db8bdfff3ffeb83809785a0d8dc650 1 | Листок 2 · ПМИ 2019/20 --></div></div>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=fxvXX4PatBA&amp;t=2238s">Операции над столбцами · ПМИ 2021/22, лекция 4, с 37:18</a></aside>
 <p>Для столбцов действует симметричное правило. Пусть у <i>A</i> ровно <i>n</i> столбцов. Постройте матрицу <i>F</i> порядка <i>n</i>, применив операцию к строкам единичной матрицы. Тогда <i>AF<sup>T</sup></i> выполнит соответствующую операцию над столбцами <i>A</i>. При замене столбцов в системе уравнений нужно учитывать, как меняются переменные.</p></section>
 <section id="check"><h2>Проверьте себя</h2><p class="refs">Задачи и разбор решений составлены для Атласа.</p><ol>
 <li>Какую матрицу поставить слева от двухстрочной матрицы, чтобы прибавить ко второй строке утроенную первую? Как отменить результат?
-<details><summary>Проверить матрицу</summary><p>Первая строка множителя равна (1, 0), вторая — (3, 1). В обратной матрице вторая строка равна (−3, 1). Их произведение в любом порядке даёт единичную матрицу.</p></details></li>
+<details><summary>Проверить матрицу</summary><p>Первая строка множителя равна (1, 0), вторая — (3, 1). В обратной матрице вторая строка равна (−3, 1). Их произведение в любом порядке даёт единичную матрицу.</p></details>
+</li>
 <li>У матрицы три строки и пять столбцов. Какого размера множители нужны для обмена двух строк и для обмена двух столбцов?
 <details><summary>Проверить размеры</summary><p>Слева нужна перестановочная матрица 3 × 3, справа — 5 × 5. Обе операции сохраняют размер результата 3 × 5.</p></details></li>
 <li>Продолжите пример с расширенной матрицей. После получения строки (0, 0, 1 │ 1) вычтите её из первой. Как теперь прочитать общее решение?
