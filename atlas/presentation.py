@@ -69,7 +69,7 @@ def write_catalog(store, output):
         destination = target.parent/'atlas-lessons'
         destination.mkdir(exist_ok=True)
         learning = files('atlas').joinpath('learning')
-        for name in ('course.css', 'lecture-video.js', 'matrices.html', 'gauss.html', 'homogeneous.html'):
+        for name in ('course.css', 'lecture-video.js', 'matrices.html', 'gauss.html', 'homogeneous.html', 'elementary.html', 'years.html'):
             (destination/name).write_bytes(learning.joinpath(name).read_bytes())
         outline = learning.joinpath('index.html').read_text(encoding='utf8')
         catalog_link = f'<a href="../{quote(target.name, safe="")}">Все программы Атласа</a>'

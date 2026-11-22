@@ -398,14 +398,25 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert third.h1.get_text() == 'Урок 3. Однородные системы'
     assert [a['href'] for a in third.select('a[rel=prev]')] == ['gauss.html'] * 2
     assert len(third.select('#check li details')) == 3
+    assert [a['href'] for a in third.select('a[rel=next]')] == ['elementary.html'] * 2
+    fourth = BeautifulSoup((course_dir/'elementary.html').read_text('utf8'), 'html.parser')
+    assert fourth.h1.get_text() == 'Урок 4. Элементарные матрицы'
+    assert [a['href'] for a in fourth.select('a[rel=prev]')] == ['homogeneous.html'] * 2
+    assert len(fourth.select('#check li details')) == 3
+    years = BeautifulSoup((course_dir/'years.html').read_text('utf8'), 'html.parser')
+    assert [s['id'] for s in years.select('section[id]')] == [f'year-{y}' for y in range(2019,2027)]
+    for lesson in [unit, second, third, fourth]:
+        assert lesson.select_one('a[href^="years.html"]')
     assert (course_dir/'lecture-video.js').is_file()
     from urllib.parse import parse_qs, urlsplit
     for doc, video_id, seconds in [(unit,'m3sgbykms3Y',[1495,2700,3256,4027]),
                                    (second,'x6TG2Q1D2TE',[1069,3098,4042,4703]),
-                                   (third,'Wg4HctY-2u4',[208,317,504,943,1190])]:
+                                   (third,'Wg4HctY-2u4',[208,317,504,943,1190]),
+                                   (fourth,'fxvXX4PatBA',[1563,1649,1827,2069,2238])]:
         video = doc.select_one('section#video')
         assert doc.main.find('section') == video
-        assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id
+        start = '&t=1563s' if doc is fourth else ''
+        assert video.select_one('.watch-recording')['href'] == 'https://www.youtube.com/watch?v='+video_id+start
         assert doc.select_one('script[src="lecture-video.js"]')
         assert video.select_one('.inline-video[data-title]')
         assert [parse_qs(urlsplit(a['href']).query) for a in video.select('.video-moments a')] == [
@@ -413,7 +424,8 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     assert [a['href'] for a in second.select('a[rel=prev]')] == ['matrices.html','matrices.html']
     assert len(second.select('#check li details')) == 3
     outline = BeautifulSoup((course_dir/'index.html').read_text('utf8'), 'html.parser')
-    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html']
+    assert [a['href'] for a in outline.select('ol a')] == ['matrices.html','gauss.html','homogeneous.html','elementary.html']
+    assert outline.select_one('a[href="years.html"]')
     assert 'Запланирован' in outline.select_one('ol li:last-child').get_text()
     assert not outline.select('ol li:last-child a')
     assert (course_dir/outline.footer.a['href']).resolve() == output
