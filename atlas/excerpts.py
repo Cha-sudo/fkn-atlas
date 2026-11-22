@@ -10,7 +10,7 @@ from .store import digest
 # Coordinates are PDF points from the upper left. The adjacent source link also
 # works when the original or the optional PDF renderer is unavailable locally.
 EXCERPT = re.compile(
-    r"<!-- excerpt (?:(board) )?(open|fold) ([0-9a-f]{64}) (\d+) "
+    r"<!-- excerpt (?:(board) )?(?:(?:open|fold) )?([0-9a-f]{64}) (\d+) "
     r"(\d+) (\d+) (\d+) (\d+) \| ([^<>\n]+?) -->"
 )
 
@@ -24,7 +24,7 @@ def render_excerpts(markup, store, destination):
         pymupdf = None
 
     def render(match):
-        board, mode, sha, page_number, left, top, right, bottom, description = match.groups()
+        board, sha, page_number, left, top, right, bottom, description = match.groups()
         source = store.object_path(sha)
         if not source.is_file():
             return ""
@@ -61,10 +61,9 @@ def render_excerpts(markup, store, destination):
         folder.mkdir(exist_ok=True)
         (folder / name).write_bytes(pixels.tobytes("png"))
         url = f"excerpts/{name}"
-        opened = " open" if mode == "open" else ""
-        return (page_link + f'<details class="source-image"{opened}><summary>Фрагмент оригинала</summary>'
+        return (page_link + '<figure class="source-image">'
                 f'<a href="{url}" title="Открыть изображение в полном размере">'
                 f'<img src="{url}" width="{pixels.width}" height="{pixels.height}" '
-                f'loading="lazy" alt="{html.escape(description, quote=True)}"></a></details>')
+                f'loading="lazy" alt="{html.escape(description, quote=True)}"></a></figure>')
 
     return EXCERPT.sub(render, markup)

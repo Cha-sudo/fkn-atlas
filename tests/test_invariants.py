@@ -386,6 +386,12 @@ def test_course_entry_and_stream_headings(s, tmp_path):
     path = page.find('a', string=lambda t: t and 'Начать линейную алгебру' in t)['href']
     unit = BeautifulSoup((tmp_path/path).read_text('utf8'), 'html.parser')
     assert unit.h1.get_text() == 'Урок 1. Матрицы и первые операции'
+    # A table in a paragraph makes browsers close the paragraph before the
+    # table, leaving its matrix brackets empty.
+    matrices = unit.select('.matrix')
+    assert matrices and len(matrices) == len(unit.select('main table'))
+    assert all(m.name == 'div' and m.select_one(':scope > table') for m in matrices)
+    assert all(m.find_parent(class_='formula') and not m.find_parent('p') for m in matrices)
     assert len(unit.select('#check li details')) == 5
     course_dir = (tmp_path/path).parent
     assert (course_dir/unit.select_one('link[rel=stylesheet]')['href']).is_file()
@@ -464,7 +470,7 @@ def test_private_excerpt_checks_bytes_and_links_the_exact_pdf_page(s, tmp_path):
     writer.write(buffer)
     data = buffer.getvalue()
     sha = digest(data)
-    marker = f"<!-- excerpt open {sha} 2 3 4 43 24 | Формула из тестовой страницы -->"
+    marker = f"<!-- excerpt fold {sha} 2 3 4 43 24 | Формула из тестовой страницы -->"
     original = '<a href="https://example.org/course.pdf">Слайд 2</a>'
     assert render_excerpts(original + marker, s, tmp_path) == original
     path = s.object_path(sha)
@@ -477,7 +483,8 @@ def test_private_excerpt_checks_bytes_and_links_the_exact_pdf_page(s, tmp_path):
     target, page = lesson.select_one('.source-page')['href'].split('#')
     assert page == 'page=2' and (tmp_path/target).read_bytes() == data
     if find_spec('pymupdf'):
-        img = lesson.select_one('details[open] img')
+        img = lesson.select_one('figure.source-image img')
+        assert not img.find_parent('details')
         assert img['alt'] == 'Формула из тестовой страницы'
         assert (img['width'], img['height']) == ('120', '60')
         assert img.parent['href'] == img['src']
@@ -494,7 +501,7 @@ def test_source_board_renders_inert_images(s, tmp_path):
     path = s.object_path(sha)
     path.parent.mkdir(exist_ok=True)
     path.write_bytes(data)
-    marker = f"<!-- excerpt board open {sha} 1 0 0 45 20 | Фрагмент доски -->"
+    marker = f"<!-- excerpt board {sha} 1 0 0 45 20 | Фрагмент доски -->"
     doc = BeautifulSoup(render_excerpts(marker, s, tmp_path), 'html.parser')
     for asset in [doc.select_one('.source-page')['href'], doc.img['src']]:
         assert asset.endswith('.png')

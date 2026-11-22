@@ -23,56 +23,94 @@
 </section>
 <nav aria-label="Разделы занятия"><a href="#shape">Размер и элементы</a><a href="#addition">Сложение</a><a href="#transpose">Транспонирование</a><a href="#product">Произведение</a><a href="#check">Самопроверка</a></nav>
 <section id="shape"><h2>Как читать матрицу</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Матрица и индексы · ПМИ 2023/24, лекция 1, с. 4–5</a>
-<!-- excerpt fold 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
+<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 4 22 43 345 203 | Определение размера матрицы и расположение элемента в строке i и столбце j. --></aside>
 <p><strong>Пример Атласа.</strong> Пусть две мастерские выпускают по три вида деталей. Каждая строка таблицы описывает мастерскую, каждый столбец — вид детали. Таблица чисел с фиксированным порядком строк и столбцов называется <b>матрицей</b>. У матрицы размера <i>m</i> × <i>n</i> имеется <i>m</i> строк и <i>n</i> столбцов.</p>
-<div class="formula">Q = <span class="matrix"><table aria-label="Выпуск деталей двух мастерских"><tbody><tr><td>2</td><td>0</td><td>1</td></tr><tr><td>3</td><td>1</td><td>4</td></tr></tbody></table></span></div>
+<div class="formula">
+<div class="formula-term"><span><i>Q</i> =</span><div class="matrix"><table aria-label="Выпуск деталей двух мастерских"><tbody><tr><td>2</td><td>0</td><td>1</td></tr><tr><td>3</td><td>1</td><td>4</td></tr></tbody></table></div></div>
+</div>
 <p>Запись <i>q</i><sub>23</sub> означает элемент во второй строке и третьем столбце. В примере он равен 4. Матрица размера 2 × 3 отличается от матрицы размера 3 × 2, даже если обе заполнены нулями. Две матрицы равны, когда у них одинаковый размер и все элементы на одинаковых местах совпадают.</p>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Векторы-столбцы · ПМИ 2023/24, лекция 1, с. 8</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=2700s">Слушать с 45:00</a>
-<!-- excerpt fold 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 8 22 28 338 146 | Пространство вещественных координат и их запись столбцом. --></aside>
+<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 8 22 28 338 146 | Пространство вещественных координат и их запись столбцом. --></aside>
 <p>Вектор из <i>n</i> вещественных координат будем записывать столбцом размера <i>n</i> × 1. Например, столбец цен трёх деталей содержит три строки. Запись ℝ<sup>n</sup> обозначает множество таких упорядоченных наборов.<sup class="source-ref"><a href="#source-1" aria-label="Источник 1">[1]</a></sup></p>
 </section>
 <section id="addition"><h2>Сумма и умножение на число</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/1FM7VlSCy9JzQZf2F7VFqlymJqLGOfYYA/view">Сложение и умножение на скаляр · ПМИ 2023/24, лекция 1, с. 6</a>
-<!-- excerpt fold 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 6 23 58 339 235 | Поэлементные формулы суммы матриц и произведения матрицы на число. --></aside>
+<!-- excerpt 2d3d6ae51e493997f3dc491699918ce4aff2e3479089beae100877b522f384a7 6 23 58 339 235 | Поэлементные формулы суммы матриц и произведения матрицы на число. --></aside>
 <p>Чтобы узнать выпуск за два дня, складываем числа для одной и той же мастерской и одного вида деталей. Формула для каждого места имеет вид (<i>A</i> + <i>D</i>)<sub>ij</sub> = <i>a</i><sub>ij</sub> + <i>d</i><sub>ij</sub>. Размеры должны совпадать. Если умножить матрицу на число λ, каждый её элемент умножится на λ. Вычитание означает прибавление матрицы с противоположными элементами.</p>
-<div class="formula"><span class="matrix"><table aria-label="Первое слагаемое"><tbody><tr><td>1</td><td>2</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></span> + 2 <span class="matrix"><table aria-label="Матрица для умножения на два"><tbody><tr><td>0</td><td>3</td></tr><tr><td>2</td><td>1</td></tr></tbody></table></span> = <span class="matrix"><table aria-label="Результат сложения"><tbody><tr><td>1</td><td>8</td></tr><tr><td>4</td><td>1</td></tr></tbody></table></span></div>
+<div class="formula">
+<div class="matrix"><table aria-label="Первое слагаемое"><tbody><tr><td>1</td><td>2</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></div>
+<div class="formula-term"><span>+ 2</span><div class="matrix"><table aria-label="Матрица для умножения на два"><tbody><tr><td>0</td><td>3</td></tr><tr><td>2</td><td>1</td></tr></tbody></table></div></div>
+<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Результат сложения"><tbody><tr><td>1</td><td>8</td></tr><tr><td>4</td><td>1</td></tr></tbody></table></div></div>
+</div>
 <p>Справа внизу получается −1 + 2 · 1 = 1.</p>
 <div id="entrywise-proof"><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.dropbox.com/s/ttoti50j3etdyi7/Lec01_2020-09-07.pdf?dl=0">Распределительный закон, свойство 6 · ПМИ 2020/21, лекция 1, с. 4</a>
-<!-- excerpt fold e8dbfa0e2468070f7ca923814349c69939b24e8b0ffa441b507c86cb3d053cb0 4 23 171 178 186 | Шестое свойство на слайде: распределительность относительно суммы двух матриц. --></aside>
+<!-- excerpt e8dbfa0e2468070f7ca923814349c69939b24e8b0ffa441b507c86cb3d053cb0 4 23 171 178 186 | Шестое свойство на слайде: распределительность относительно суммы двух матриц. --></aside>
 <p>Докажите для любой пары матриц одного размера, что <i>λ(A + D) = λA + λD</i>. Достаточно сравнить одну произвольную клетку.<sup class="source-ref"><a href="#source-2" aria-label="Источник 2">[2]</a></sup></p>
 <details><summary>Проверить доказательство</summary><p>В клетке <i>(i, j)</i> слева стоит <i>λ(aᵢⱼ + dᵢⱼ)</i>, справа — <i>λaᵢⱼ + λdᵢⱼ</i>. Распределительный закон для чисел даёт равенство в каждой клетке, а значит, и равенство матриц.</p></details></div>
 <p>Нулевая матрица того же размера оставляет сумму без изменения. Сложение с −<i>A</i> даёт нулевую матрицу. Множитель 1 сохраняет <i>A</i>, а последовательное умножение на два числа равносильно умножению на их произведение.</p>
 </section>
 <section id="transpose"><h2>Что меняется при транспонировании</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=3256s">Транспонирование · ПМИ 2022/23, лекция 1, слушать с 54:16</a></aside>
 <p>У матрицы <i>A</i><sup>T</sup> строки и столбцы поменялись ролями. Первая строка <i>A</i> становится первым столбцом <i>A</i><sup>T</sup>. В общем виде (<i>A</i><sup>T</sup>)<sub>ij</sub> = <i>a</i><sub>ji</sub>. Размер <i>m</i> × <i>n</i> превращается в <i>n</i> × <i>m</i>.</p>
-<div class="formula">A = <span class="matrix"><table aria-label="Матрица A, две строки и три столбца"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></span> <span>и</span> A<sup>T</sup> = <span class="matrix"><table aria-label="Транспонированная матрица A"><tbody><tr><td>1</td><td>−1</td></tr><tr><td>2</td><td>0</td></tr><tr><td>0</td><td>3</td></tr></tbody></table></span></div>
+<div class="formula">
+<div class="formula-term"><span><i>A</i> =</span><div class="matrix"><table aria-label="Матрица A, две строки и три столбца"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></div></div>
+<div class="formula-term"><span><i>A</i><sup>T</sup> =</span><div class="matrix"><table aria-label="Транспонированная матрица A"><tbody><tr><td>1</td><td>−1</td></tr><tr><td>2</td><td>0</td></tr><tr><td>0</td><td>3</td></tr></tbody></table></div></div>
+</div>
 <p>Число 2 перешло из позиции (1, 2) в позицию (2, 1). Второе транспонирование вернёт каждую клетку на прежнее место, поэтому (<i>A</i><sup>T</sup>)<sup>T</sup> = <i>A</i>. Транспонировать сумму можно по слагаемым: в клетке (i, j) обеих сторон равенства (<i>A</i> + <i>D</i>)<sup>T</sup> = <i>A</i><sup>T</sup> + <i>D</i><sup>T</sup> стоит <i>a</i><sub>ji</sub> + <i>d</i><sub>ji</sub>.<sup class="source-ref"><a href="#source-3" aria-label="Источник 3">[3]</a></sup></p>
 </section>
 <section id="product"><h2>Как работает произведение матриц</h2><aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Умножение матриц · ПМИ 2023/24, лекция 2, с. 1</a> · <a href="https://www.youtube.com/watch?v=m3sgbykms3Y&amp;t=4027s">Слушать с 1:07:07 · 2022/23</a>
-<!-- excerpt open aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 1 23 54 236 89 | Размеры A, B и AB. Элемент c с индексами i, j записан как произведение строки A и столбца B. --></aside>
+<!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 1 23 54 236 89 | Размеры A, B и AB. Элемент c с индексами i, j записан как произведение строки A и столбца B. --></aside>
 <p>На слайде <i>A</i><sub>(i)</sub> означает строку <i>i</i>, а <i>B</i><sup>(j)</sup> — столбец <i>j</i>. В них по <i>n</i> чисел. Перемножьте их попарно и сложите произведения. Получится одно число — элемент <i>c</i><sub>ij</sub>. Каждая из <i>m</i> строк встречается с каждым из <i>p</i> столбцов, поэтому размер результата равен <i>m</i> × <i>p</i>.<sup class="source-ref"><a href="#source-4" aria-label="Источник 4">[4]</a></sup></p>
 <p><strong>Пример Атласа.</strong> Мастерская выпустила 2, 0 и 1 деталь трёх видов по цене 3, 5 и 7 рублей. Строка количеств, умноженная на столбец цен, даёт общую стоимость: 2 · 3 + 0 · 5 + 1 · 7 = 13 рублей. В таблице ниже тем же способом можно вычислить любую клетку.</p>
 <div class="example"><p><b>Выберите клетку результата.</b> Подсветка показывает, какие строка и столбец участвуют в расчёте.</p>
-<div class="formula"><span class="matrix"><table id="left" aria-label="Первый множитель A"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></span> × <span class="matrix"><table id="right" aria-label="Второй множитель B"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr><tr><td>4</td><td>2</td></tr></tbody></table></span> = <span class="matrix"><table id="result" aria-label="Выберите элемент произведения"><tbody><tr><td><button type="button" data-row="0" data-col="0" aria-label="Строка 1, столбец 1, значение 4" aria-pressed="true">4</button></td><td><button type="button" data-row="0" data-col="1" aria-label="Строка 1, столбец 2, значение −1" aria-pressed="false">−1</button></td></tr><tr><td><button type="button" data-row="1" data-col="0" aria-label="Строка 2, столбец 1, значение 10" aria-pressed="false">10</button></td><td><button type="button" data-row="1" data-col="1" aria-label="Строка 2, столбец 2, значение 5" aria-pressed="false">5</button></td></tr></tbody></table></span></div>
+<div class="formula">
+<div class="matrix"><table aria-label="Первый множитель A" id="left"><tbody><tr><td>1</td><td>2</td><td>0</td></tr><tr><td>−1</td><td>0</td><td>3</td></tr></tbody></table></div>
+<div class="formula-term"><span>×</span><div class="matrix"><table aria-label="Второй множитель B" id="right"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr><tr><td>4</td><td>2</td></tr></tbody></table></div></div>
+<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Выберите элемент произведения" id="result"><tbody><tr><td><button aria-label="Строка 1, столбец 1, значение 4" aria-pressed="true" data-col="0" data-row="0" type="button">4</button></td><td><button aria-label="Строка 1, столбец 2, значение −1" aria-pressed="false" data-col="1" data-row="0" type="button">−1</button></td></tr><tr><td><button aria-label="Строка 2, столбец 1, значение 10" aria-pressed="false" data-col="0" data-row="1" type="button">10</button></td><td><button aria-label="Строка 2, столбец 2, значение 5" aria-pressed="false" data-col="1" data-row="1" type="button">5</button></td></tr></tbody></table></div></div>
+</div>
 <p id="calculation" aria-live="polite">c₁₁ = 1 · 2 + 2 · 1 + 0 · 4 = 4</p><noscript><p>Например, c₂₁ = (−1) · 2 + 0 · 1 + 3 · 4 = 10. Кнопки подсветки работают при включённом JavaScript.</p></noscript></div>
 <p>В этом примере <i>AB</i> имеет размер 2 × 2, а <i>BA</i> — 3 × 3. Уже размеры исключают равенство. Бывает, что обратный порядок вообще невозможен. Перед вычислением всегда подпишите размеры обоих множителей.</p>
 <h3 id="matrix-system">Переход к системам уравнений</h3>
 <aside class="primary-source"><span>Первоисточник</span> <a href="https://drive.google.com/file/d/12t3952vjApqVFCrtJYuHEru6gq1w90jS/view">Матричная запись системы · ПМИ 2023/24, лекция 2, с. 5</a>
-<!-- excerpt fold aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 5 23 45 322 222 | Матрица коэффициентов A, столбцы b и x и итоговое равенство Ax = b. --></aside>
-<p><strong>Пример Атласа.</strong> Если умножить матрицу <span class="matrix"><table aria-label="Коэффициенты системы"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></tbody></table></span> на столбец <span class="matrix"><table aria-label="Неизвестные x и y"><tbody><tr><td>x</td></tr><tr><td>y</td></tr></tbody></table></span>, получится столбец с координатами 2<i>x</i> + <i>y</i> и <i>x</i> − <i>y</i>. Приравняв его к столбцу (5, 1)<sup>T</sup>, мы задали сразу два уравнения. Пара <i>x</i> = 2, <i>y</i> = 1 удовлетворяет обоим. Теперь запись <i>Ax</i> = <i>b</i> можно прочитать построчно.</p>
+<!-- excerpt aa17f32020c7c6db777084985038d14b03e470cdc61cf27f8584ab027844b7e7 5 23 45 322 222 | Матрица коэффициентов A, столбцы b и x и итоговое равенство Ax = b. --></aside>
+<p><strong>Пример Атласа.</strong> Запишем два уравнения одним матричным равенством.</p>
+<div class="formula">
+<div class="matrix"><table aria-label="Коэффициенты системы"><tbody><tr><td>2</td><td>1</td></tr><tr><td>1</td><td>−1</td></tr></tbody></table></div>
+<div class="formula-term"><span>·</span><div class="matrix"><table aria-label="Неизвестные x и y"><tbody><tr><td>x</td></tr><tr><td>y</td></tr></tbody></table></div></div>
+<div class="formula-term"><span>=</span><div class="matrix"><table aria-label="Столбец правых частей"><tbody><tr><td>5</td></tr><tr><td>1</td></tr></tbody></table></div></div>
+</div>
+<p>Прочитайте равенство по строкам.</p>
+<ul>
+<li>Первая строка даёт <i>2x + y = 5</i>.</li>
+<li>Вторая строка даёт <i>x − y = 1</i>.</li>
+</ul>
+<p>Подставим <i>x = 2</i> и <i>y = 1</i>. Получаем <i>2 · 2 + 1 = 5</i> и <i>2 − 1 = 1</i>. Оба уравнения выполнены.</p>
 </section>
 <section id="check"><h2>Проверьте себя</h2><p>Числовые упражнения и решения составлены для Атласа. В задаче 4 вы примените тождество из листка ПМИ. Сначала запишите ответ на бумаге. Затем раскройте решение и сравните ход вычислений.</p>
 <ol><li>Для матрицы <i>Q</i> из начала урока найдите <i>q</i><sub>12</sub> и (<i>Q</i><sup>T</sup>)<sub>32</sub>. Можно ли сложить <i>Q</i> с <i>Q</i><sup>T</sup>?
 <details><summary>Проверить индексы</summary><p>В первой строке и втором столбце <i>Q</i> стоит 0. Второй искомый элемент равен <i>q</i><sub>23</sub> = 4. У слагаемых размеры 2 × 3 и 3 × 2, поэтому сумма не определена.</p></details></li>
-<li>Пусть <i>U</i> = <span class="matrix"><table aria-label="Матрица U"><tbody><tr><td>1</td><td>−2</td></tr><tr><td>3</td><td>0</td></tr></tbody></table></span>, <i>V</i> = <span class="matrix"><table aria-label="Матрица V"><tbody><tr><td>2</td><td>1</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></span>. Найдите 2<i>U</i> − <i>V</i> и объясните знак в нижней правой клетке.
-<details><summary>Проверить линейную комбинацию</summary><p>Результат <span class="matrix"><table aria-label="Ответ для двух U минус V"><tbody><tr><td>0</td><td>−5</td></tr><tr><td>6</td><td>1</td></tr></tbody></table></span>. Справа внизу 2 · 0 − (−1) = 1.</p></details></li>
+<li>Найдите 2<i>U</i> − <i>V</i> для этих матриц и объясните знак в нижней правой клетке.
+<div class="formula">
+<div class="formula-term"><span><i>U</i> =</span><div class="matrix"><table aria-label="Матрица U"><tbody><tr><td>1</td><td>−2</td></tr><tr><td>3</td><td>0</td></tr></tbody></table></div></div>
+<div class="formula-term"><span><i>V</i> =</span><div class="matrix"><table aria-label="Матрица V"><tbody><tr><td>2</td><td>1</td></tr><tr><td>0</td><td>−1</td></tr></tbody></table></div></div>
+</div>
+<details><summary>Проверить линейную комбинацию</summary><div class="formula">
+<div class="formula-term"><span>2<i>U</i> − <i>V</i> =</span><div class="matrix"><table aria-label="Ответ для двух U минус V"><tbody><tr><td>0</td><td>−5</td></tr><tr><td>6</td><td>1</td></tr></tbody></table></div></div>
+</div>
+<p>Справа внизу 2 · 0 − (−1) = 1.</p></details></li>
 <li>Пусть <i>P</i> имеет размер 2 × 3, а <i>R</i> — 3 × 4. Какие из произведений <i>PR</i> и <i>RP</i> существуют? Сколько пар чисел нужно перемножить, чтобы вычислить одну клетку <i>PR</i>?
 <details><summary>Проверить размеры</summary><p><i>PR</i> имеет размер 2 × 4. В одной клетке суммируются три произведения. Для <i>RP</i> внутренние размеры 4 и 2 различны.</p></details></li>
 <li id="commutator"><aside class="primary-source"><span>Первоисточник</span> <a href="https://www.dropbox.com/s/cj358c0590pa3y3/LA_19-20_Sheet1.pdf?dl=0">Антикоммутативность · ПМИ 2019/20, листок 1, с. 1, задача 1(1)</a>
-<!-- excerpt fold 1bde56e2f1cc6faad467a4ad7696c2b53d3bbdec08adaea383876df611b3fca8 1 45 216 458 242 | Условие задачи 1 и тождество первого пункта о перестановке аргументов. --></aside>
-Вычислите <i>UV</i> и <i>VU</i> для матриц из задачи 2. Их разность <i>[U,V] = UV − VU</i> называется коммутатором. Как изменится коммутатор, если поменять множители местами?<sup class="source-ref"><a href="#source-5" aria-label="Источник 5">[5]</a></sup>
-<details><summary>Проверить произведения</summary><p><i>UV</i> = <span class="matrix"><table aria-label="Произведение UV"><tbody><tr><td>2</td><td>3</td></tr><tr><td>6</td><td>3</td></tr></tbody></table></span>, <i>VU</i> = <span class="matrix"><table aria-label="Произведение VU"><tbody><tr><td>5</td><td>−4</td></tr><tr><td>−3</td><td>0</td></tr></tbody></table></span>. Например, слева вверху для <i>VU</i> получается 2 · 1 + 1 · 3 = 5. Вычтем результаты по клеткам. У <i>[U,V]</i> первая строка (−3, 7), вторая (9, 3). При обмене множителей у каждой клетки меняется знак, поскольку <i>[V,U] = VU − UV = −[U,V]</i>. Последнее равенство верно для любых двух квадратных матриц одного размера.</p></details></li>
+<!-- excerpt 1bde56e2f1cc6faad467a4ad7696c2b53d3bbdec08adaea383876df611b3fca8 1 45 216 458 242 | Условие задачи 1 и тождество первого пункта о перестановке аргументов. --></aside>
+Вычислите <i>UV</i> и <i>VU</i> для матриц из задачи 2. Их разность <i>[U,V] = UV − VU</i> называется коммутатором. Докажите тождество из листка при обмене <i>U</i> и <i>V</i>.<sup class="source-ref"><a href="#source-5" aria-label="Источник 5">[5]</a></sup>
+<details><summary>Проверить произведения</summary><div class="formula">
+<div class="formula-term"><span><i>UV</i> =</span><div class="matrix"><table aria-label="Произведение UV"><tbody><tr><td>2</td><td>3</td></tr><tr><td>6</td><td>3</td></tr></tbody></table></div></div>
+<div class="formula-term"><span><i>VU</i> =</span><div class="matrix"><table aria-label="Произведение VU"><tbody><tr><td>5</td><td>−4</td></tr><tr><td>−3</td><td>0</td></tr></tbody></table></div></div>
+</div>
+<p>Например, слева вверху для <i>VU</i> получается 2 · 1 + 1 · 3 = 5. Вычтем результаты по клеткам. У <i>[U,V]</i> первая строка (−3, 7), вторая (9, 3). При обмене множителей у каждой клетки меняется знак, поскольку <i>[V,U] = VU − UV = −[U,V]</i>. Последнее равенство верно для любых двух квадратных матриц одного размера.</p></details></li>
 <li>Составьте <i>Ax</i> = <i>b</i> для системы <i>u</i> − 2<i>v</i> = 1, 3<i>u</i> + <i>v</i> = 10. Подстановкой проверьте пару (3, 1).
-<details><summary>Проверить запись системы</summary><p><i>A</i> = <span class="matrix"><table aria-label="Матрица коэффициентов"><tbody><tr><td>1</td><td>−2</td></tr><tr><td>3</td><td>1</td></tr></tbody></table></span>, столбцы неизвестных и правых частей — (<i>u</i>, <i>v</i>)<sup>T</sup> и (1, 10)<sup>T</sup>. Подстановка даёт 3 − 2 = 1 и 9 + 1 = 10.</p></details></li></ol>
+<details><summary>Проверить запись системы</summary><div class="formula">
+<div class="formula-term"><span><i>A</i> =</span><div class="matrix"><table aria-label="Матрица коэффициентов"><tbody><tr><td>1</td><td>−2</td></tr><tr><td>3</td><td>1</td></tr></tbody></table></div></div>
+</div>
+<p>Столбцы неизвестных и правых частей — (<i>u</i>, <i>v</i>)<sup>T</sup> и (1, 10)<sup>T</sup>. Подстановка даёт 3 − 2 = 1 и 9 + 1 = 10.</p></details></li></ol>
 <p><b>Готовность к следующей теме.</b> Если вы можете выбрать операцию, обосновать её допустимость и проверить уравнения подстановкой, у вас есть основа для изучения преобразований строк. При ошибке в индексах вернитесь к транспонированию, при поклеточном умножении — к примеру со строкой и столбцом.</p></section>
 <footer><details class="lesson-sources"><summary>Источники урока</summary>
 <ol>

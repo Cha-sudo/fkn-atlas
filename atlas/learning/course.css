@@ -11,6 +11,8 @@ h2{font-size:1.85rem;margin:1.35em 0 .45em}
 h3{font-size:1.12rem;margin:1.15em 0 .25em}
 p{margin:.55em 0}
 .formula{display:flex;align-items:center;flex-wrap:wrap;gap:.42em;font:1.15em Georgia,serif;margin:12px 0 15px}
+.formula-term{display:flex;align-items:center;gap:.35em}
+.formula-term>span{white-space:nowrap}
 .matrix{display:inline-block;border-left:2px solid #43535c;border-right:2px solid #43535c;border-radius:7px;padding:.12em .25em;vertical-align:middle}
 .matrix table{border-collapse:collapse;font-variant-numeric:tabular-nums}
 .matrix td{text-align:center;min-width:1.7em;padding:0 .2em}
@@ -75,8 +77,7 @@ h2,h3{break-after:avoid}
 
 .primary-source{border-inline-start:2px solid #aac1ba;padding:.1rem 0 .1rem .75rem;margin:.55rem 0 .8rem;font-size:.92rem;line-height:1.45}
 .primary-source>span{display:block;font-size:.81rem;color:#475d59}
-.primary-source .source-image{border:0;padding:0;margin:.35rem 0 0}
-.source-image summary{width:fit-content;cursor:pointer}
+.source-image{margin:.4rem 0 0}
 .source-image img{display:block;height:auto;max-width:100%;margin:.4rem 0;background:white}
-.source-image a{display:block;width:fit-content;max-width:100%}
+.source-image a{display:block;width:fit-content;max-width:100%;cursor:zoom-in}
 .primary-source .source-page{display:inline-block;margin-inline-start:.7em}
